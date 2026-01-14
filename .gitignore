@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+tmpclaude-*-cwd
+.claude/settings.local.json
