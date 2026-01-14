@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell.exe -Command \"Set-Location ''D:\\\\dev\\\\mcandle\\\\vpos-claude-beacon_2926-01-09''; .\\\\gradlew.bat assembleDebug\")"
+    ]
+  }
+}
