@@ -1,6 +1,353 @@
 # VPOS Beacon 앱 개발 로그
 
-## 2026-01-14 - UI 리뉴얼 및 패키지 변경
+## 2026-01-14 - UI 통일 및 프로젝트 정리 (v1.0.8)
+
+### 변경 개요
+- 모든 화면의 헤더를 56dp로 통일
+- 디바이스 목록을 멤버십 정보만 표시하도록 단순화
+- Config, UUID, Slave 버튼을 Settings 다이얼로그로 이동
+- 사용하지 않는 Activity 및 Layout 파일 삭제 (프로젝트 정리)
+- GitHub 신규 저장소(vpos_new) 생성 및 전체 push
+
+---
+
+## 1. UI 단순화 및 통일
+
+### 1.1 item_device.xml - 멤버십 정보만 표시
+**파일**: `app/src/main/res/layout/item_device.xml`
+
+**변경 사항**:
+- MAC Address TextView 제거
+- RSSI TextView 및 ImageView 제거
+- 멤버십 정보(tvMembershipInfo)만 표시
+- 레이아웃 구조 단순화
+
+**Before**:
+```xml
+<LinearLayout orientation="vertical">
+    <TextView tvMembershipInfo />
+    <LinearLayout orientation="horizontal">
+        <TextView tvMacAddress />
+        <ImageView ivRssiIcon />
+        <TextView tvRssiValue />
+    </LinearLayout>
+</LinearLayout>
+```
+
+**After**:
+```xml
+<LinearLayout orientation="vertical">
+    <TextView tvMembershipInfo />
+</LinearLayout>
+```
+
+### 1.2 DeviceAdapter.java - 관련 코드 제거
+**파일**: `app/src/main/java/com/example/apidemo/adapter/DeviceAdapter.java`
+
+**변경 사항**:
+- `macAddressTextView`, `rssiValueTextView`, `rssiIcon` 필드 제거
+- `onBindViewHolder()`에서 MAC, RSSI 표시 코드 제거
+- `DeviceViewHolder`를 `membershipInfoTextView`만 포함하도록 단순화
+- 불필요한 import 제거 (ImageView, PorterDuff, ContextCompat)
+
+### 1.3 activity_beacon.xml - 고급 설정 버튼 제거
+**파일**: `app/src/main/res/layout/activity_beacon.xml`
+
+**변경 사항**:
+- GridLayout에서 Config, UUID, Slave 버튼 제거
+- Query, Start, Stop, Scan Config, Scan, Stop Scan 버튼만 유지
+- 레이아웃이 더 깔끔하고 간결해짐
+
+### 1.4 dialog_settings.xml - 고급 설정 버튼 추가
+**파일**: `app/src/main/res/layout/dialog_settings.xml`
+
+**추가 내용**:
+- "고급 설정" 섹션 추가
+- Config, UUID, Slave 버튼을 3열 레이아웃으로 배치
+- 일반 설정(타이틀, 매장명, 판매원)과 고급 설정 분리
+
+```xml
+<TextView text="고급 설정" />
+<LinearLayout orientation="horizontal">
+    <Button id="btn_beacon_config" text="Config" />
+    <Button id="btn_uuid_config" text="UUID" />
+    <Button id="btn_slave" text="Slave" />
+</LinearLayout>
+```
+
+### 1.5 BeaconActivity.java - 설정 다이얼로그 핸들러 추가
+**파일**: `app/src/main/java/com/example/apidemo/BeaconActivity.java`
+
+**변경 사항**:
+
+#### initEvent() 수정
+```java
+// 제거된 버튼
+- findViewById(R.id.btn_beacon_config).setOnClickListener(this);
+- findViewById(R.id.btn_uuid_config).setOnClickListener(this);
+- findViewById(R.id.btn_slave).setOnClickListener(this);
+```
+
+#### showSettingsDialog() 확장
+```java
+Button btnBeaconConfig = dialogView.findViewById(R.id.btn_beacon_config);
+Button btnUuidConfig = dialogView.findViewById(R.id.btn_uuid_config);
+Button btnSlave = dialogView.findViewById(R.id.btn_slave);
+
+btnBeaconConfig.setOnClickListener(v -> {
+    dialog.dismiss();
+    onClick(v);
+});
+// UUID, Slave도 동일하게 처리
+```
+
+---
+
+## 2. 화면별 헤더 통일 (56dp)
+
+### 2.1 activity_ble_connect.xml
+**파일**: `app/src/main/res/layout/activity_ble_connect.xml`
+
+**변경 전**:
+- 헤더 높이: 80dp
+- 네비게이션 영역 별도 (layoutNav)
+- 이전 버튼과 타이틀이 헤더 아래에 위치
+
+**변경 후**:
+- 헤더 높이: **56dp**
+- 이전 버튼을 헤더 좌측으로 이동
+- "혜택 안내" 타이틀도 헤더로 이동
+- 직원명 우측에 유지
+- layoutNav 제거, ScrollView가 바로 헤더 아래에 배치
+
+**구조**:
+```xml
+<RelativeLayout id="layoutHeader" height="56dp">
+    <LinearLayout alignParentStart>
+        <Button id="btnBack" text="← 이전" />
+        <TextView text="혜택 안내" />
+    </LinearLayout>
+    <TextView id="tvHeaderStaff" alignParentEnd />
+</RelativeLayout>
+```
+
+### 2.2 activity_payment.xml
+**파일**: `app/src/main/res/layout/activity_payment.xml`
+
+**변경 전**:
+- 헤더 높이: 80dp
+- 네비게이션 영역(layoutNav)에 이전 버튼 + 타이틀 별도 배치
+
+**변경 후**:
+- 헤더 높이: **56dp**
+- 이전 버튼을 헤더 좌측으로 이동
+- "카드 결제" 타이틀도 헤더로 이동
+- layoutNav 제거
+- 일관된 UI 구조
+
+### 2.3 activity_success.xml
+**파일**: `app/src/main/res/layout/activity_success.xml`
+
+**변경 전**:
+- 헤더 없음
+- 카드 내부에 큰 "결제 완료" 텍스트 (26sp)
+
+**변경 후**:
+- 헤더 높이: **56dp** 추가
+- "결제 완료" 타이틀이 헤더로 이동 (16sp)
+- 직원명 우측에 표시
+- 카드 내부의 큰 "결제 완료" 텍스트 제거
+- 체크 아이콘만 유지
+
+**구조**:
+```xml
+<RelativeLayout id="layoutHeader" height="56dp">
+    <TextView text="결제 완료" alignParentStart />
+    <TextView id="tvHeaderStaff" alignParentEnd />
+</RelativeLayout>
+
+<MaterialCardView>
+    <FrameLayout> <!-- 체크 아이콘만 --> </FrameLayout>
+    <View divider />
+    <상품정보, 결제금액 등>
+</MaterialCardView>
+```
+
+---
+
+## 3. 프로젝트 정리 (Cleansing)
+
+### 3.1 삭제된 Activity (Java 파일 10개)
+
+#### MainActivity에서 연결된 Activity 삭제
+1. **MainActivity.java** - 메인 메뉴 화면 (더 이상 사용 안 함)
+2. **ComActivity.java** - Serial communication demo
+3. **IccActivity.java** - Chip card reader demo
+4. **MsrActivity.java** - Magnetic stripe reader demo
+5. **PiccActivity.java** - Contactless card reader demo
+6. **PrintActivity.java** - Thermal printer demo
+7. **ScanActivity.java** - Barcode/QR scanner demo
+8. **SysActivity.java** - System utilities
+
+#### ScanActivity에서 사용된 Activity 삭제
+9. **barcode/BarcodeScanActivity.java** - Barcode scan
+10. **barcode/QRCodeScanActivity.java** - QR code scan
+
+**삭제 후 남은 Activity**:
+- `BeaconActivity.java` - 메인 화면 (LAUNCHER)
+- `BleConnectActivity.java` - BLE 연결 및 혜택 안내
+- `PaymentActivity.java` - 카드 결제
+- `SuccessActivity.java` - 결제 완료
+
+### 3.2 삭제된 Layout (9개)
+
+1. **activity_main.xml** - MainActivity 레이아웃
+2. **activity_com.xml** - ComActivity 레이아웃
+3. **activity_icc.xml** - IccActivity 레이아웃
+4. **activity_msr.xml** - MsrActivity 레이아웃
+5. **activity_picc.xml** - PiccActivity 레이아웃
+6. **activity_print.xml** - PrintActivity 레이아웃
+7. **activity_scan.xml** - ScanActivity 레이아웃
+8. **activity_sys.xml** - SysActivity 레이아웃
+9. **activity_qrcode_scan.xml** - QRCodeScanActivity 레이아웃
+
+**삭제 후 남은 Layout**:
+- `activity_beacon.xml`
+- `activity_ble_connect.xml`
+- `activity_payment.xml`
+- `activity_success.xml`
+- `dialog_settings.xml`
+- `dialog_ble_connect.xml`
+- `item_*.xml` (device, header, beacon_info, scan_filter_info)
+
+### 3.3 AndroidManifest.xml 정리
+**파일**: `app/src/main/AndroidManifest.xml`
+
+**변경 전**: 13개 Activity 선언
+**변경 후**: 4개 Activity만 유지
+
+```xml
+<application>
+    <activity name="com.example.apidemo.BeaconActivity" exported="true">
+        <intent-filter>
+            <action name="android.intent.action.MAIN" />
+            <category name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+    </activity>
+    <activity name="com.example.apidemo.BleConnectActivity" />
+    <activity name="com.example.apidemo.PaymentActivity" />
+    <activity name="com.example.apidemo.SuccessActivity" />
+</application>
+```
+
+### 3.4 barcode 디렉토리 제거
+**디렉토리**: `app/src/main/java/com/example/apidemo/barcode/`
+
+- 두 개의 Activity 삭제 후 빈 디렉토리 제거
+- 프로젝트 구조 단순화
+
+---
+
+## 4. GitHub 저장소 생성 및 Push
+
+### 4.1 저장소 정보
+- **URL**: https://github.com/mcandle-dev/vpos_new.git
+- **Branch**: main
+- **초기 커밋**: f258fd2
+
+### 4.2 커밋 정보
+```
+Initial commit: VPOS Beacon application
+
+- BLE Beacon/Master management with EFR32BG22 module
+- Customer payment flow (BleConnect -> Payment -> Success)
+- Device scanning with membership info display
+- Cleaned up: removed unused activities
+- Unified UI with 56dp header bars across all screens
+- Advanced settings dialog with Config, UUID, and Slave buttons
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+```
+
+### 4.3 Push 통계
+- **파일 수**: 109개
+- **라인 수**: 16,527줄 추가
+- **포함 내용**:
+  - Java Activity (4개)
+  - Layout 파일 (4개 Activity + 다이얼로그 + 아이템)
+  - VPOS Library (AAR)
+  - Documentation (CLAUDE.md, BeaconActivity_Documentation.md 등)
+  - Build 설정 (Gradle, AndroidManifest.xml)
+  - GitHub Actions CI 설정
+
+---
+
+## 5. 테스트 체크리스트
+
+### UI 통일 확인
+- [ ] BeaconActivity: Config/UUID/Slave 버튼 없음
+- [ ] Settings 다이얼로그: 고급 설정 버튼 있음
+- [ ] 모든 화면 헤더 높이: 56dp
+- [ ] BleConnect: 이전 버튼 + 타이틀이 헤더에 위치
+- [ ] Payment: 이전 버튼 + 타이틀이 헤더에 위치
+- [ ] Success: 결제 완료 타이틀이 헤더에 위치
+
+### 디바이스 목록 확인
+- [ ] 멤버십 정보만 표시 (MAC, RSSI 없음)
+- [ ] "1234님 (1234 5678 1234 5678)" 형식
+- [ ] 클릭 시 BleConnectActivity 이동
+
+### 빌드 확인
+- [ ] Clean build 성공
+- [ ] 불필요한 Activity import 없음
+- [ ] 삭제된 layout 참조 없음
+
+### GitHub 확인
+- [ ] https://github.com/mcandle-dev/vpos_new 접속 가능
+- [ ] 파일 목록 정상 표시
+- [ ] README 또는 Documentation 확인 가능
+
+---
+
+## 6. 주요 개선 사항 정리
+
+### 사용자 경험 개선
+1. **일관된 헤더 디자인**: 모든 화면이 56dp 헤더로 통일되어 앱 전체가 통일감 있음
+2. **단순화된 디바이스 목록**: 필수 정보(멤버십)만 표시하여 가독성 향상
+3. **설정 구조화**: 일반 설정과 고급 설정 분리로 접근성 개선
+
+### 코드 품질 개선
+1. **불필요한 코드 제거**: 8개 Activity + 관련 Layout 삭제로 유지보수성 향상
+2. **명확한 책임 분리**: Beacon 기능에만 집중된 구조
+3. **파일 구조 단순화**: barcode 디렉토리 제거 등
+
+### 프로젝트 관리 개선
+1. **버전 관리 시작**: GitHub 저장소 생성 및 초기 커밋
+2. **문서화**: CHANGELOG.md에 모든 변경사항 기록
+3. **CI/CD 준비**: GitHub Actions 워크플로우 포함
+
+---
+
+## 7. 향후 계획
+
+### 단기 (v1.1.0)
+- [ ] Settings 화면을 별도 Activity로 분리
+- [ ] 멤버십 정보 파싱 로직 개선 (에러 처리 강화)
+- [ ] 빌드 버전을 1.0.8로 업데이트
+
+### 중기 (v1.2.0)
+- [ ] Dark Mode 지원
+- [ ] 다국어 지원 (영어, 일본어)
+- [ ] 결제 히스토리 기능 추가
+
+### 장기 (v2.0.0)
+- [ ] Java 패키지를 com.mcandle.vpos로 마이그레이션
+- [ ] Jetpack Compose 마이그레이션 검토
+- [ ] 백엔드 API 연동
+
+---
+
+## 2026-01-14 - UI 리뉴얼 및 패키지 변경 (v1.0.7)
 
 ### 변경 개요
 - VPOS 3893 Beacon 앱을 vpos_scanner 프로젝트 스타일로 UI 전면 개편
@@ -426,4 +773,5 @@ com.example.apidemo (Java 패키지 - 실제 코드 위치)
 ## 변경 이력
 | 날짜 | 버전 | 내용 |
 |------|------|------|
+| 2026-01-14 | 1.0.8 | UI 통일, 프로젝트 정리, GitHub 저장소 생성 |
 | 2026-01-14 | 1.0.7 | UI 리뉴얼, 패키지명 변경, 설정 다이얼로그 추가 |
