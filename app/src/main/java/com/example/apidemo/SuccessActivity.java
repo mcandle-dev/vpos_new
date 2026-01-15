@@ -23,6 +23,11 @@ public class SuccessActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_success);
 
+        // Hide ActionBar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         String productName = getIntent().getStringExtra("EXTRA_PRODUCT_NAME");
         if (productName == null) productName = "상품";
 

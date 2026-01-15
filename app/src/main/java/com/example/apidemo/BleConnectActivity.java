@@ -206,14 +206,13 @@ public class BleConnectActivity extends AppCompatActivity {
     }
 
     private void disconnectAndFinish() {
+        // 즉시 화면 종료 후 백그라운드에서 BLE disconnect 처리
+        finish();
         if (bleConnection != null && bleConnection.isConnected()) {
             new Thread(() -> {
-                Log.d(TAG, "Disconnecting BLE...");
+                Log.d(TAG, "Disconnecting BLE in background...");
                 bleConnection.disconnect();
-                runOnUiThread(this::finish);
             }).start();
-        } else {
-            finish();
         }
     }
 

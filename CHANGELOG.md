@@ -1,5 +1,131 @@
 # VPOS Beacon 앱 개발 로그
 
+## 2026-01-15 - UI 개선 및 Broadcast Name 설정 추가 (v1.0.9)
+
+### 변경 개요
+- 설정 다이얼로그에 Broadcast Name 필드 추가
+- 디바이스 목록에 MAC 주소와 RSSI 정보 다시 표시
+- 결제 완료 화면에 하단 상태 바 추가
+- DeviceAdapter 헤더 제거로 코드 단순화
+
+---
+
+### 1. 설정 다이얼로그 개선
+
+#### 1.1 dialog_settings.xml - Broadcast Name 필드 추가
+**파일**: `app/src/main/res/layout/dialog_settings.xml`
+
+**추가된 내용**:
+- Broadcast Name TextInputLayout 추가
+- 기존 판매원 필드 아래에 배치
+
+```xml
+<com.google.android.material.textfield.TextInputLayout
+    android:hint="Broadcast Name">
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/etBroadcastName" />
+</com.google.android.material.textfield.TextInputLayout>
+```
+
+#### 1.2 BeaconActivity.java - Broadcast Name 저장 로직
+**파일**: `app/src/main/java/com/example/apidemo/BeaconActivity.java`
+
+**변경 사항**:
+- `showSettingsDialog()`에 etBroadcastName 필드 추가
+- scanInfo SharedPreferences에서 broadcastName 로드/저장
+- 설정 저장 시 scanInfo에 broadcastName 저장
+
+```java
+EditText etBroadcastName = dialogView.findViewById(R.id.etBroadcastName);
+SharedPreferences scanSp = getSharedPreferences("scanInfo", MODE_PRIVATE);
+etBroadcastName.setText(scanSp.getString("broadcastName", ""));
+
+// 저장 시
+SharedPreferences.Editor scanEditor = scanSp.edit();
+scanEditor.putString("broadcastName", broadcastName);
+scanEditor.apply();
+```
+
+---
+
+### 2. 디바이스 목록 UI 복원
+
+#### 2.1 item_device.xml - MAC/RSSI 정보 다시 표시
+**파일**: `app/src/main/res/layout/item_device.xml`
+
+**변경 사항**:
+- 멤버십 정보 아래에 MAC 주소와 RSSI 정보 다시 추가
+- 좌측: MAC 주소 (12sp, 회색)
+- 우측: RSSI 아이콘 + 값 (14sp)
+
+```xml
+<LinearLayout orientation="horizontal">
+    <TextView id="tvMacAddress" />
+    <LinearLayout>
+        <ImageView id="ivRssiIcon" />
+        <TextView id="tvRssiValue" />
+    </LinearLayout>
+</LinearLayout>
+```
+
+#### 2.2 DeviceAdapter.java - 헤더 제거 및 RSSI 표시 복원
+**파일**: `app/src/main/java/com/example/apidemo/adapter/DeviceAdapter.java`
+
+**변경 사항**:
+- TYPE_HEADER, TYPE_ITEM 상수 제거
+- HeaderViewHolder 클래스 제거
+- getItemViewType() 메서드 제거
+- position 계산에서 헤더 오프셋 제거 (position - 1 → position)
+- DeviceViewHolder에 macAddressTextView, rssiValueTextView, rssiIcon 필드 추가
+- onBindViewHolder()에 MAC, RSSI 바인딩 코드 추가
+- RSSI 값에 따른 아이콘 색상 처리 복원
+
+```java
+// RSSI 아이콘 색상 처리
+if (device.getRssi() == -100) {
+    holder.rssiValueTextView.setTextColor(grayColor);
+    holder.rssiIcon.setColorFilter(grayColor, PorterDuff.Mode.SRC_IN);
+} else {
+    holder.rssiValueTextView.setTextColor(defaultColor);
+    holder.rssiIcon.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
+}
+```
+
+---
+
+### 3. 결제 완료 화면 개선
+
+#### 3.1 activity_success.xml - 하단 상태 바 추가
+**파일**: `app/src/main/res/layout/activity_success.xml`
+
+**추가된 내용**:
+- 56dp 높이의 하단 상태 바 추가
+- 녹색 원형 인디케이터 + "결제 완료" 텍스트
+- 설정 아이콘 우측 배치
+- 카드뷰 레이아웃 조정 (verticalBias: 0.4)
+
+```xml
+<LinearLayout id="layoutBottomBar" height="56dp">
+    <View background="@drawable/circle_green" />
+    <TextView text="결제 완료" textColor="#4CAF50" />
+    <ImageView src="@drawable/ic_settings" />
+</LinearLayout>
+```
+
+---
+
+### 4. 변경 파일 목록
+
+| 파일 | 변경 내용 |
+|------|----------|
+| BeaconActivity.java | Broadcast Name 설정 로직 추가 |
+| DeviceAdapter.java | 헤더 제거, MAC/RSSI 표시 복원 |
+| item_device.xml | MAC/RSSI 레이아웃 추가 |
+| dialog_settings.xml | Broadcast Name 입력 필드 추가 |
+| activity_success.xml | 하단 상태 바 추가 |
+
+---
+
 ## 2026-01-14 - UI 통일 및 프로젝트 정리 (v1.0.8)
 
 ### 변경 개요

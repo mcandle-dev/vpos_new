@@ -35,6 +35,11 @@ public class PaymentActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
 
+        // Hide ActionBar
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
+
         // Get intent extras
         mode = getIntent().getStringExtra("EXTRA_MODE");
         if (mode == null) mode = "OFFLINE";

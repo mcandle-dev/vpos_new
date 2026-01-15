@@ -1,13 +1,17 @@
 package com.example.apidemo.adapter;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.graphics.PorterDuff;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.mcandle.vpos.R;
@@ -16,9 +20,7 @@ import com.example.apidemo.ble.Device;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DeviceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    private static final int TYPE_HEADER = 0;
-    private static final int TYPE_ITEM = 1;
+public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceViewHolder> {
     private static final int removeBleTime = 3*1000;//3s내 재스캔 없으면 목록에서 제거
     private List<Device> deviceList;
     private OnDeviceClickListener clickListener;
@@ -99,47 +101,49 @@ public class DeviceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
 
     @NonNull
     @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        if (viewType == TYPE_HEADER) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_header, parent, false);
-            return new HeaderViewHolder(view);
-        } else {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_device, parent, false);
-            return new DeviceViewHolder(view);
-        }
+    public DeviceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_device, parent, false);
+        return new DeviceViewHolder(view);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (holder instanceof DeviceViewHolder) {
-            Device device = deviceList.get(position - 1); // 헤더 위치 제외
-            DeviceViewHolder deviceHolder = (DeviceViewHolder) holder;
+    public void onBindViewHolder(@NonNull DeviceViewHolder holder, int position) {
+        Device device = deviceList.get(position);
 
-            // 멤버십 정보 파싱 및 표시
-            String membershipInfo = parseServiceUuidForMembership(device.getServiceUuid());
-            deviceHolder.membershipInfoTextView.setText(membershipInfo);
+        // 멤버십 정보 파싱 및 표시
+        String membershipInfo = parseServiceUuidForMembership(device.getServiceUuid());
+        holder.membershipInfoTextView.setText(membershipInfo);
 
-            // 클릭 리스너
-            holder.itemView.setOnClickListener(v -> {
-                if (clickListener != null) {
-                    clickListener.onDeviceClick(device);
-                }
-            });
+        // MAC 주소
+        holder.macAddressTextView.setText(device.getMacAddress());
+
+        // RSSI 정보
+        holder.rssiValueTextView.setText(device.getRssi() + " dBm");
+
+        // RSSI 아이콘 색상
+        Context context = holder.itemView.getContext();
+        int grayColor = ContextCompat.getColor(context, R.color.gray);
+        int defaultColor = ContextCompat.getColor(context, R.color.default_text_color);
+
+        if (device.getRssi() == -100) {
+            holder.rssiValueTextView.setTextColor(grayColor);
+            holder.rssiIcon.setColorFilter(grayColor, PorterDuff.Mode.SRC_IN);
+        } else {
+            holder.rssiValueTextView.setTextColor(defaultColor);
+            holder.rssiIcon.setColorFilter(defaultColor, PorterDuff.Mode.SRC_IN);
         }
+
+        // 클릭 리스너
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) {
+                clickListener.onDeviceClick(device);
+            }
+        });
     }
 
     @Override
     public int getItemCount() {
-        return deviceList.size() + 1;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        if (position == 0) {
-            return TYPE_HEADER;
-        } else {
-            return TYPE_ITEM;
-        }
+        return deviceList.size();
     }
 
     public void setDeviceList(List<Device> deviceList) {
@@ -153,12 +157,12 @@ public class DeviceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 deviceList.get(i).setRssi(device.getRssi());
                 deviceList.get(i).setDeviceName(device.getDeviceName());
                 deviceList.get(i).setServiceUuid(device.getServiceUuid());
-                notifyItemChanged(i + 1);
+                notifyItemChanged(i);
                 return;
             }
         }
         deviceList.add(device);
-        notifyItemInserted(deviceList.size());
+        notifyItemInserted(deviceList.size() - 1);
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -183,10 +187,10 @@ public class DeviceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
                 device.setServiceUuid(deviceList.get(position).getServiceUuid());
             }
             deviceList.set(position, device);
-            notifyItemChanged(position + 1);
+            notifyItemChanged(position);
         } else {
             deviceList.add(device);
-            notifyItemInserted(deviceList.size());
+            notifyItemInserted(deviceList.size() - 1);
         }
         removeDisappearDevice();
     }
@@ -196,28 +200,28 @@ public class DeviceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder>
         for (int i = deviceList.size() - 1; i >= 0; i--) {
             if (current_timeStamp - deviceList.get(i).getTimestamp() > removeBleTime) {
                 deviceList.remove(i);
-                notifyItemRemoved(i + 1);
+                notifyItemRemoved(i);
             }
         }
     }
 
     public void removeDevice(int position) {
         deviceList.remove(position);
-        notifyItemRemoved(position + 1);
-    }
-
-    public static class HeaderViewHolder extends RecyclerView.ViewHolder {
-        public HeaderViewHolder(@NonNull View itemView) {
-            super(itemView);
-        }
+        notifyItemRemoved(position);
     }
 
     public static class DeviceViewHolder extends RecyclerView.ViewHolder {
         TextView membershipInfoTextView;
+        TextView macAddressTextView;
+        TextView rssiValueTextView;
+        ImageView rssiIcon;
 
         public DeviceViewHolder(@NonNull View itemView) {
             super(itemView);
             membershipInfoTextView = itemView.findViewById(R.id.tvMembershipInfo);
+            macAddressTextView = itemView.findViewById(R.id.tvMacAddress);
+            rssiValueTextView = itemView.findViewById(R.id.tvRssiValue);
+            rssiIcon = itemView.findViewById(R.id.ivRssiIcon);
         }
     }
 }

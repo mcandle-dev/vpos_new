@@ -1435,7 +1435,9 @@ private static JSONObject parsePayload(String payload) {
      * Load saved settings and update header texts
      */
     private void loadSettingsToHeader() {
-        SharedPreferences sp = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
+
+
+         sp = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
         String shopName = sp.getString("shop", "6F 스포츠관 나이키");
         String salesperson = sp.getString("salesperson", "한아름 (224456)");
 
@@ -1452,6 +1454,7 @@ private static JSONObject parsePayload(String payload) {
         EditText etTitle = dialogView.findViewById(R.id.etTitle);
         EditText etShop = dialogView.findViewById(R.id.etShop);
         EditText etSalesperson = dialogView.findViewById(R.id.etSalesperson);
+        EditText etBroadcastName = dialogView.findViewById(R.id.etBroadcastName);
         Button btnCancel = dialogView.findViewById(R.id.btnCancel);
         Button btnSave = dialogView.findViewById(R.id.btnSave);
         Button btnBeaconConfig = dialogView.findViewById(R.id.btn_beacon_config);
@@ -1460,9 +1463,11 @@ private static JSONObject parsePayload(String payload) {
 
         // Load current settings
         SharedPreferences sp = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
+        SharedPreferences scanSp = getSharedPreferences("scanInfo", MODE_PRIVATE);
         etTitle.setText(sp.getString("title", "VPOS"));
         etShop.setText(sp.getString("shop", "6F 스포츠관 나이키"));
         etSalesperson.setText(sp.getString("salesperson", "한아름 (224456)"));
+        etBroadcastName.setText(scanSp.getString("broadcastName", ""));
 
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setView(dialogView)
@@ -1496,6 +1501,7 @@ private static JSONObject parsePayload(String payload) {
             String title = etTitle.getText().toString().trim();
             String shop = etShop.getText().toString().trim();
             String salesperson = etSalesperson.getText().toString().trim();
+            String broadcastName = etBroadcastName.getText().toString().trim();
 
             // Save settings
             SharedPreferences.Editor editor = sp.edit();
@@ -1503,6 +1509,11 @@ private static JSONObject parsePayload(String payload) {
             editor.putString("shop", shop);
             editor.putString("salesperson", salesperson);
             editor.apply();
+
+            // Save broadcastName to scanInfo
+            SharedPreferences.Editor scanEditor = scanSp.edit();
+            scanEditor.putString("broadcastName", broadcastName);
+            scanEditor.apply();
 
             // Update header
             loadSettingsToHeader();

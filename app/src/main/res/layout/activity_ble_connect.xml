@@ -67,7 +67,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="12dp">
 
             <!-- Customer Status Card -->
             <com.google.android.material.card.MaterialCardView
@@ -82,7 +82,7 @@
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="16dp">
+                    android:padding="12dp">
 
                     <TextView
                         android:id="@+id/tvCustomerNameLabel"
@@ -133,7 +133,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="10dp"
                 app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="@dimen/card_radius"
                 app:cardElevation="4dp"
@@ -144,7 +144,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="12dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -172,10 +172,10 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="8dp"
                         android:background="#F8F9FB"
                         android:orientation="vertical"
-                        android:padding="14dp">
+                        android:padding="10dp">
 
                         <RelativeLayout
                             android:layout_width="match_parent"
@@ -242,8 +242,8 @@
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnCardPayment"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_marginTop="14dp"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="10dp"
                         android:backgroundTint="#1976D2"
                         android:text="카드 결제 진행"
                         android:textColor="#FFFFFF"
@@ -256,7 +256,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="10dp"
                 app:cardBackgroundColor="#FFFFFF"
                 app:cardCornerRadius="@dimen/card_radius"
                 app:cardElevation="2dp"
@@ -267,7 +267,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="12dp">
 
                     <RelativeLayout
                         android:layout_width="match_parent"
@@ -293,8 +293,8 @@
                         android:id="@+id/btnAppPayment"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_marginTop="12dp"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="8dp"
                         android:text="앱 결제 요청"
                         android:textColor="#1976D2"
                         android:enabled="false"
