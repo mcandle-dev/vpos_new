@@ -26,14 +26,17 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.example.apidemo.adapter.DeviceAdapter;
+import com.google.android.material.button.MaterialButton;
 import com.example.apidemo.ble.BleConnection;
 import com.example.apidemo.ble.Device;
 import com.example.apidemo.ble.DividerItemDecoration;
+import com.example.apidemo.model.Order;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import org.json.JSONArray;
@@ -53,7 +56,7 @@ import vpos.apipackage.Com;
 
 import com.mcandle.vpos.R;
 
-public class BeaconActivity extends AppCompatActivity implements View.OnClickListener {
+public class BeaconActivity extends AppCompatActivity {
 
     private static final int RECORD_PROMPT_MSG = 0x06;
     private static final int SCAN_DATA_PROMPT_MSG = 0x08;
@@ -72,6 +75,30 @@ public class BeaconActivity extends AppCompatActivity implements View.OnClickLis
     // Header UI elements
     private TextView tvHeaderLogo;
     private TextView tvHeaderStaff;
+
+    // Product info UI elements
+    private LinearLayout layoutScanGuide;
+    private LinearLayout layoutProductLoading;
+    private LinearLayout layoutProductDetails;
+    private TextView tvOrderNumber;
+    private TextView tvProductName;
+    private TextView tvProductOption;
+    private TextView tvProductPrice;
+
+    // Toggle button
+    private MaterialButton btnScanToggle;
+
+    // Status bar UI elements
+    private View viewStatusIndicator;
+    private TextView tvBottomStatus;
+
+    // Status constants
+    public enum Status {
+        WAITING,
+        SCANNING,
+        CONNECTING,
+        CONNECTED
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,10 +117,33 @@ public class BeaconActivity extends AppCompatActivity implements View.OnClickLis
         initEvent();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reload settings when returning from SettingsActivity
+        loadSettingsToHeader();
+    }
+
     private void initView() {
         // Header
         tvHeaderLogo = findViewById(R.id.tvHeaderLogo);
         tvHeaderStaff = findViewById(R.id.tvHeaderStaff);
+
+        // Product info
+        layoutScanGuide = findViewById(R.id.layoutScanGuide);
+        layoutProductLoading = findViewById(R.id.layoutProductLoading);
+        layoutProductDetails = findViewById(R.id.layoutProductDetails);
+        tvOrderNumber = findViewById(R.id.tvOrderNumber);
+        tvProductName = findViewById(R.id.tvProductName);
+        tvProductOption = findViewById(R.id.tvProductOption);
+        tvProductPrice = findViewById(R.id.tvProductPrice);
+
+        // Toggle button
+        btnScanToggle = findViewById(R.id.btn_scan_toggle);
+
+        // Status bar
+        viewStatusIndicator = findViewById(R.id.viewStatusIndicator);
+        tvBottomStatus = findViewById(R.id.tvBottomStatus);
 
         // RecyclerView
         recyclerView = findViewById(R.id.recycler_view);
@@ -107,12 +157,18 @@ public class BeaconActivity extends AppCompatActivity implements View.OnClickLis
             navigateToBleConnect(device);
         });
 
-        // Settings icon click listener
+        // Settings icon click listener - Navigate to SettingsActivity
         ImageView ivSettings = findViewById(R.id.ivSettings);
-        ivSettings.setOnClickListener(v -> showSettingsDialog());
+        ivSettings.setOnClickListener(v -> {
+            Intent intent = new Intent(BeaconActivity.this, SettingsActivity.class);
+            startActivity(intent);
+        });
 
         // Load saved settings to header
         loadSettingsToHeader();
+
+        // Set initial status
+        updateStatus(Status.WAITING);
     }
 
     private void initData() {
@@ -122,13 +178,180 @@ public class BeaconActivity extends AppCompatActivity implements View.OnClickLis
     }
 
     private void initEvent() {
-        // ActionBar is hidden, using custom header instead
-        findViewById(R.id.btn_beacon_query).setOnClickListener(this);
-        findViewById(R.id.btn_beacon_start).setOnClickListener(this);
-        findViewById(R.id.btn_beacon_stop).setOnClickListener(this);
-        findViewById(R.id.btn_master_scan).setOnClickListener(this);
-        findViewById(R.id.btn_master_scanStop).setOnClickListener(this);
-        findViewById(R.id.btn_master_scan_config).setOnClickListener(this);
+        // Toggle button click listener
+        btnScanToggle.setOnClickListener(v -> toggleScan());
+    }
+
+    /**
+     * Toggle between Start and Stop scan
+     */
+    private void toggleScan() {
+        if (startScan) {
+            // Currently scanning, stop it
+            stopScanAction();
+        } else {
+            // Not scanning, start it
+            startScanAction();
+        }
+    }
+
+    /**
+     * Start BLE scanning
+     */
+    private void startScanAction() {
+        Log.d("BeaconActivity", "Starting scan...");
+
+        // Update UI
+        btnScanToggle.setText("Stop");
+        btnScanToggle.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#F44336")));
+
+        // Show loading first
+        showProductLoading();
+
+        // Update status
+        updateStatus(Status.SCANNING);
+
+        // Delay 1 second then show product info (simulating API call)
+        new Handler().postDelayed(() -> {
+            showProductInfo();
+        }, 1000);
+
+        // Enable master mode (same as original)
+        int ret = At.Lib_EnableMaster(true);
+        if (ret != 0) {
+            Log.e("BeaconActivity", "Failed to enable master mode: " + ret);
+        }
+
+        // Set startScan flag BEFORE calling AtStartNewScan (same as original)
+        startScan = true;
+
+        // Get scan filter settings
+        SharedPreferences scanSp = getSharedPreferences("scanInfo", MODE_PRIVATE);
+        String macAddress = scanSp.getString("macAddress", "");
+        String broadcastName = scanSp.getString("broadcastName", "");
+        String rssiStr = scanSp.getString("rssi", "0");
+        String manufacturerId = scanSp.getString("manufacturerId", "");
+        String data = scanSp.getString("data", "");
+
+        int rssi = 0;
+        try {
+            rssi = -Integer.parseInt(rssiStr);
+        } catch (NumberFormatException e) {
+            rssi = 0;
+        }
+
+        Log.d("BeaconActivity", "Scan params - MAC: " + macAddress + ", Name: " + broadcastName + ", RSSI: " + rssi);
+
+        // Start scan (same as original)
+        ret = At.Lib_AtStartNewScan(macAddress, broadcastName, rssi, manufacturerId, data);
+        if (ret == 0) {
+            new Thread(recvScanData).start();
+        } else {
+            Log.e("BeaconActivity", "Failed to start scan: " + ret);
+            startScan = false;
+            btnScanToggle.setText("Start");
+            btnScanToggle.setBackgroundTintList(
+                    android.content.res.ColorStateList.valueOf(Color.parseColor("#1976D2")));
+            updateStatus(Status.WAITING);
+        }
+    }
+
+    /**
+     * Stop BLE scanning
+     */
+    private void stopScanAction() {
+        Log.d("BeaconActivity", "Stopping scan...");
+        startScan = false;
+
+        new Thread(() -> {
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Log.e("BeaconActivity", "Sleep interrupted: " + e.getMessage());
+            }
+
+            int ret = At.Lib_AtStopScan();
+            Log.d("BeaconActivity", "Stop scan result: " + ret);
+
+            runOnUiThread(() -> {
+                // Update UI
+                btnScanToggle.setText("Start");
+                btnScanToggle.setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(Color.parseColor("#1976D2")));
+
+                // Hide product info, show guide
+                hideProductInfo();
+
+                // Clear device list
+                deviceAdapter.clearDeviceList();
+
+                // Update status
+                updateStatus(Status.WAITING);
+            });
+        }).start();
+    }
+
+    /**
+     * Show loading indicator
+     */
+    private void showProductLoading() {
+        layoutScanGuide.setVisibility(View.GONE);
+        layoutProductLoading.setVisibility(View.VISIBLE);
+        layoutProductDetails.setVisibility(View.GONE);
+    }
+
+    /**
+     * Show product information (hardcoded for now)
+     */
+    private void showProductInfo() {
+        layoutScanGuide.setVisibility(View.GONE);
+        layoutProductLoading.setVisibility(View.GONE);
+        layoutProductDetails.setVisibility(View.VISIBLE);
+
+        // TODO: Later get from API
+        tvOrderNumber.setText("주문번호: 260115143");
+        tvProductName.setText("나이키알파플라이3");
+        tvProductOption.setText("265 / 블랙");
+        tvProductPrice.setText("349,000원");
+    }
+
+    /**
+     * Hide product information
+     */
+    private void hideProductInfo() {
+        layoutScanGuide.setVisibility(View.VISIBLE);
+        layoutProductLoading.setVisibility(View.GONE);
+        layoutProductDetails.setVisibility(View.GONE);
+    }
+
+    /**
+     * Update status bar
+     */
+    public void updateStatus(Status status) {
+        runOnUiThread(() -> {
+            switch (status) {
+                case WAITING:
+                    viewStatusIndicator.setBackgroundResource(R.drawable.circle_gray);
+                    tvBottomStatus.setText(R.string.status_waiting);
+                    tvBottomStatus.setTextColor(Color.parseColor("#757575"));
+                    break;
+                case SCANNING:
+                    viewStatusIndicator.setBackgroundResource(R.drawable.circle_blue);
+                    tvBottomStatus.setText(R.string.status_scanning);
+                    tvBottomStatus.setTextColor(Color.parseColor("#1976D2"));
+                    break;
+                case CONNECTING:
+                    viewStatusIndicator.setBackgroundResource(R.drawable.circle_orange);
+                    tvBottomStatus.setText(R.string.status_connecting);
+                    tvBottomStatus.setTextColor(Color.parseColor("#FF9800"));
+                    break;
+                case CONNECTED:
+                    viewStatusIndicator.setBackgroundResource(R.drawable.circle_green);
+                    tvBottomStatus.setText(R.string.status_connected);
+                    tvBottomStatus.setTextColor(Color.parseColor("#4CAF50"));
+                    break;
+            }
+        });
     }
 
     @Override
@@ -557,301 +780,7 @@ private static JSONObject parsePayload(String payload) {
         return manufacturerId.matches("^[0-9A-Fa-f]+$");
     }
 
-    @Override
-    public void onClick(View view) {
-        int viewId = view.getId();
-
-        if (R.id.btn_beacon_config == viewId) {
-            if (mStartFlag) {
-                Log.i("unique Start", "start---------->flag=" + mStartFlag);
-                return;
-            }
-            mStartFlag = true;
-            SendPromptMsg("");
-
-            View inputLayout = LayoutInflater.from(this).inflate(R.layout.item_beacon_info, null);
-            EditText etCompanyId = inputLayout.findViewById(R.id.etCompanyId);
-            EditText etMajorUuid = inputLayout.findViewById(R.id.etMajorUuid);
-            EditText etMinorUuid = inputLayout.findViewById(R.id.etMinorUuid);
-            EditText etCustomUuid = inputLayout.findViewById(R.id.etCustomUuid);
-
-            SharedPreferences sp = getSharedPreferences("beaconInfo", MODE_PRIVATE);
-            etCompanyId.setText(sp.getString("companyId", "4C00"));
-            etMajorUuid.setText(sp.getString("majorUuid", "0708"));
-            etMinorUuid.setText(sp.getString("minorUuid", "0506"));
-            etCustomUuid.setText(sp.getString("customUuid", "0112233445566778899AABBCCDDEEFF0"));
-
-            new AlertDialog.Builder(this)
-                    .setTitle("Config Beacon")
-                    .setView(inputLayout)
-                    .setCancelable(false)
-                    .setPositiveButton("OK", (dialogInterface, which) -> {
-                        String companyId = etCompanyId.getText().toString().trim();
-                        String majorUuid = etMajorUuid.getText().toString().trim();
-                        String minorUuid = etMinorUuid.getText().toString().trim();
-                        String customUuid = etCustomUuid.getText().toString().trim();
-
-                        if (TextUtils.isEmpty(companyId)
-                                || TextUtils.isEmpty(majorUuid)
-                                || TextUtils.isEmpty(minorUuid)
-                                || TextUtils.isEmpty(customUuid)) {
-                            SendPromptMsg("Empty Field!\n");
-                            mStartFlag = false;
-                            return;
-                        }
-
-                        new Thread(() -> {
-                            Beacon beacon = new Beacon(companyId, majorUuid, minorUuid, customUuid);
-                            int ret = At.Lib_SetBeaconParams(beacon);
-                            if (ret == 0) {
-                                SendPromptMsg("Config beacon succeeded!\n"
-                                        + "Company ID: 0x" + beacon.companyId + "\n"
-                                        + "Major: 0x" + beacon.major + "\n"
-                                        + "Minor: 0x" + beacon.minor + "\n"
-                                        + "Custom UUID: 0x" + beacon.customUuid + "\n");
-
-                                SharedPreferences.Editor editor = sp.edit();
-                                editor.putString("companyId", companyId);
-                                editor.putString("majorUuid", majorUuid);
-                                editor.putString("minorUuid", minorUuid);
-                                editor.putString("customUuid", customUuid);
-                                editor.apply();
-                            } else {
-                                SendPromptMsg("Config beacon failed, return: " + ret + "\n");
-                            }
-                            mStartFlag = false;
-                        }).start();
-                    })
-                    .setNegativeButton("Cancel", (dialogInterface, which) -> {
-                        SendPromptMsg("Cancel Config Beacon.\n");
-                        mStartFlag = false;
-                    })
-                    .show();
-            return;
-        }
-        else if (R.id.btn_master_scan_config == viewId) {
-            SendPromptMsg("SCAN CONFIG\n");
-            int ret = 0;
-            String[] mac = new String[1];
-            startScan=true;
-
-            View inputLayout = LayoutInflater.from(this).inflate(R.layout.item_scan_filter_info, null);
-            EditText etMacAddress = inputLayout.findViewById(R.id.etMacAddress);
-            EditText etBroadcastName = inputLayout.findViewById(R.id.etBroadcastName);
-            EditText etRssi = inputLayout.findViewById(R.id.etRssi);
-            EditText etManufacturerId = inputLayout.findViewById(R.id.etManufacturerId);
-            EditText etData = inputLayout.findViewById(R.id.etData);
-
-            SharedPreferences sp = getSharedPreferences("scanInfo", MODE_PRIVATE);
-            etMacAddress.setText(sp.getString("macAddress", ""));
-            etBroadcastName.setText(sp.getString("broadcastName", ""));
-            etRssi.setText(sp.getString("rssi", "0"));
-            etManufacturerId.setText(sp.getString("manufacturerId", ""));
-            etData.setText(sp.getString("data", ""));
-
-            new AlertDialog.Builder(this)
-                    .setTitle("Config Scan Filter")
-                    .setView(inputLayout)
-                    .setCancelable(false)
-                    .setPositiveButton("OK", (dialogInterface, which) -> {
-                        String macAddress = etMacAddress.getText().toString().trim();
-                        String broadcastName = etBroadcastName.getText().toString().trim();
-                        String rssi = etRssi.getText().toString().trim();
-                        String manufacturerId = etManufacturerId.getText().toString().trim();
-                        String data = etData.getText().toString().trim();
-
-                        if (!TextUtils.isEmpty(macAddress)&&!isValidMacAddress(macAddress)) {
-                            SendPromptMsg("Invalid MAC Address!\n");
-//                            mStartFlag = false;
-                            return;
-                        }
-
-//                        if (TextUtils.isEmpty(broadcastName)) {
-//                            SendPromptMsg("Broadcast Name is required!\n");
-//                            mStartFlag = false;
-//                            return;
-//                        }
-
-                        if (TextUtils.isEmpty(rssi)) {
-                            SendPromptMsg("RSSI is required!\n");
-//                            mStartFlag = false;
-
-//                            return;
-                        }
-
-                        if (TextUtils.isEmpty(manufacturerId) || !isValidManufacturerId(manufacturerId)) {
-                            SendPromptMsg("Invalid ManufacturerId!\n");
-//                            mStartFlag = false;
-//                            return;
-                        }
-
-                        // �����ﴦ����������ݣ����籣�浽SharedPreferences�������������
-                        SharedPreferences.Editor editor = sp.edit();
-                        editor.putString("macAddress", macAddress);
-                        editor.putString("broadcastName", broadcastName);
-                        editor.putString("rssi", rssi);
-                        editor.putString("manufacturerId", manufacturerId);
-                        editor.putString("data", data);
-                        editor.apply();
-
-                        // ����ִ����������
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-
-
-
-//
-
-            if (ret == 0) {
-                SendPromptMsg("NEW DEVICE DISCOVERED: " + mac[0] + "\n");
-            } else {
-                SendPromptMsg("ERROR WHILE SCANNING, RET = " + ret + "\n");
-            }
-        }else if (R.id.btn_master_scan == viewId) {
-            SendPromptMsg("SCANNING\n");
-            int ret = 0;
-            ret = At.Lib_EnableMaster(true);
-
-            // Configure BLE services before scanning
-            Log.d("VPOS", "Configuring BLE services before scanning...");
-//            boolean serviceConfigured = configureBleServices();
-//            if (!serviceConfigured) {
-//                Log.e("VPOS", "Failed to configure BLE services");
-//                SendPromptMsg("ERROR CONFIGURING BLE SERVICES\n");
-//                return;
-//            }
-//            Log.d("VPOS", "BLE services configured successfully");
-
-            String[] mac = new String[1];
-            startScan=true;
-            SharedPreferences sp = getSharedPreferences("scanInfo", MODE_PRIVATE);
-            Log.e("TAG", "onClick: "+"macAddress"+sp.getString("macAddress", ""));
-            Log.e("TAG", "onClick: "+"broadcastName"+sp.getString("broadcastName", ""));
-            Log.e("TAG", "onClick: "+"rssi"+sp.getString("rssi", ""));
-            Log.e("TAG", "onClick: "+"manufacturerId"+sp.getString("manufacturerId", ""));
-            Log.e("TAG", "onClick: "+"data"+sp.getString("data", ""));
-            ret = At.Lib_AtStartNewScan(sp.getString("macAddress", ""), sp.getString("broadcastName", ""),
-                    -Integer.parseInt(sp.getString("rssi", "0")),sp.getString("manufacturerId", ""),sp.getString("data", ""));
-            if(ret==0) {
-                // recvScanData.start();
-                new Thread(recvScanData).start();
-            }
-
-            if (ret == 0) {
-                SendPromptMsg("NEW DEVICE DISCOVERED: " + mac[0] + "\n");
-            } else {
-                SendPromptMsg("ERROR WHILE SCANNING, RET = " + ret + "\n");
-            }
-        }
-
-
-        new Thread() {
-
-            public void run() {
-                if (mStartFlag) {
-                    Log.i("unique Start", "start---------->flag=" + mStartFlag);
-                    return;
-                }
-                mStartFlag = true;
-                SendPromptMsg("");
-
-                if (R.id.btn_beacon_query == viewId) {
-                    Beacon beacon = new Beacon();
-                    int ret = At.Lib_GetBeaconParams(beacon);
-                    if (ret == 0) {
-                        SendPromptMsg("Query beacon succeeded!\n"
-                                + "Company ID: " + beacon.companyId + "\n"
-                                + "Major: " + beacon.major + "\n"
-                                + "Minor: " + beacon.minor + "\n"
-                                + "Custom UUID: " + beacon.customUuid + "\n");
-                    } else {
-                        SendPromptMsg("Query beacon failed, return: " + ret + "\n");
-                    }
-                }
-
-                else if (R.id.btn_beacon_start == viewId) {
-
-                    int ret = 0;
-                    if (mMasterFlag) {
-                        ret = At.Lib_EnableMaster(true);
-                    } else {
-                        ret = At.Lib_EnableBeacon(true);
-                    }
-
-                    if (ret == 0) {
-                        mEnableFlag = true;
-                        if (mMasterFlag) {
-                            SendPromptMsg("Start master succeeded!\n");
-                        } else {
-                            SendPromptMsg("Start beacon succeeded!\n");
-                        }
-                        SendPromptMsg("Note: Effective immediately; Power-off preservation.\n");
-                    } else {
-                        SendPromptMsg("Start beacon failed, return: " + ret + "\n");
-                    }
-                }
-                else if (R.id.btn_beacon_stop == viewId) {
-                    int ret = 0;
-                    if (mMasterFlag) {
-                        ret = At.Lib_EnableMaster(false);
-                    } else {
-                        ret = At.Lib_EnableBeacon(false);
-                    }
-                    if (ret == 0) {
-                        mEnableFlag = false;
-                        if (mMasterFlag) {
-                            SendPromptMsg("Stop master succeeded!\n");
-                        } else {
-                            SendPromptMsg("Stop beacon succeeded!\n");
-                        }
-                        SendPromptMsg("Note: Effective immediately; Power-off preservation.\n");
-                    } else {
-                        SendPromptMsg("Stop beacon failed, return: " + ret + "\n");
-                    }
-                } else if (R.id.btn_master_scanStop == viewId) {
-                    SendPromptMsg("SCANNING stop\n");
-                    int ret = 0;
-                    startScan=false;
-
-//                    recvScanData.interrupt();
-                    try {
-                        Thread.sleep(200);
-                    } catch (InterruptedException e) {
-                        Log.e("TAG", "R.id.btn_beacon_start 0000: JSONException"+e );
-                        throw new RuntimeException(e);
-                    }
-                    ret = At.Lib_AtStopScan();
-
-                    if (ret == 0) {
-                        SendPromptScanStopMsg("STOP SCAN SUCCESS: " + "\n");
-                    } else {
-                        SendPromptMsg("ERROR WHILE STOP SCANG, RET = " + ret + "\n");
-                    }
-
-
-                } else if (R.id.btn_slave == viewId) {
-                    SendPromptMsg("Configuring BLE services for slave role...\n");
-                    boolean serviceConfigured = configureBleServices_role0();
-                    if (serviceConfigured) {
-                        SendPromptMsg("BLE services configured successfully for slave role\n");
-                    } else {
-                        SendPromptMsg("Failed to configure BLE services for slave role\n");
-                    }
-                } else if (R.id.btn_uuid_config == viewId) {
-                    SendPromptMsg("Configuring BLE services with UUID config...\n");
-                    boolean serviceConfigured = configureBleServices();
-                    if (serviceConfigured) {
-                        SendPromptMsg("BLE services configured successfully with UUID config\n");
-                    } else {
-                        SendPromptMsg("Failed to configure BLE services with UUID config\n");
-                    }
-                }
-
-                mStartFlag = false;
-            }
-        }.start();
-    }
+    // Legacy onClick method removed - now using toggle button via initEvent()
 
     /**
      * Check and configure BLE services
@@ -1293,12 +1222,32 @@ private static JSONObject parsePayload(String payload) {
         if (startScan) {
             startScan = false;
             At.Lib_AtStopScan();
+
+            // Update UI
+            runOnUiThread(() -> {
+                btnScanToggle.setText("Start");
+                btnScanToggle.setBackgroundTintList(
+                        android.content.res.ColorStateList.valueOf(Color.parseColor("#1976D2")));
+            });
         }
+
+        // Update status to connecting
+        updateStatus(Status.CONNECTING);
+
+        // Parse phone number and card number from Service UUID
+        String phoneNumber = DeviceAdapter.parsePhoneNumberFromUuid(device.getServiceUuid());
+        String cardNumber = DeviceAdapter.parseCardNumberFromUuid(device.getServiceUuid());
+
+        // Create order object with hardcoded demo data
+        Order order = new Order();
 
         Intent intent = new Intent(this, BleConnectActivity.class);
         intent.putExtra(BleConnectActivity.EXTRA_DEVICE_MAC, device.getMacAddress());
         intent.putExtra(BleConnectActivity.EXTRA_DEVICE_NAME, device.getDeviceName());
         intent.putExtra(BleConnectActivity.EXTRA_SERVICE_UUID, device.getServiceUuid());
+        intent.putExtra(BleConnectActivity.EXTRA_PHONE_NUMBER, phoneNumber);
+        intent.putExtra(BleConnectActivity.EXTRA_CARD_NUMBER, cardNumber);
+        intent.putExtra(BleConnectActivity.EXTRA_ORDER, order);
         startActivity(intent);
     }
 
@@ -1435,9 +1384,7 @@ private static JSONObject parsePayload(String payload) {
      * Load saved settings and update header texts
      */
     private void loadSettingsToHeader() {
-
-
-         sp = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
+        SharedPreferences sp = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
         String shopName = sp.getString("shop", "6F 스포츠관 나이키");
         String salesperson = sp.getString("salesperson", "한아름 (224456)");
 
@@ -1479,21 +1426,8 @@ private static JSONObject parsePayload(String payload) {
             dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
         }
 
-        // Advanced Settings Button Listeners
-        btnBeaconConfig.setOnClickListener(v -> {
-            dialog.dismiss();
-            onClick(v);
-        });
-
-        btnUuidConfig.setOnClickListener(v -> {
-            dialog.dismiss();
-            onClick(v);
-        });
-
-        btnSlave.setOnClickListener(v -> {
-            dialog.dismiss();
-            onClick(v);
-        });
+        // Advanced Settings Button Listeners - now handled in SettingsActivity
+        // These buttons are no longer used in the dialog
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
 

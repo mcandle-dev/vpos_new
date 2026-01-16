@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="#FFFFFF">
 
-    <!-- Blue Header Bar - 1줄로 축소 -->
+    <!-- Blue Header Bar -->
     <RelativeLayout
         android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
@@ -37,143 +37,177 @@
             android:textSize="14sp" />
     </RelativeLayout>
 
-    <!-- 상품 정보 타이틀 -->
-    <TextView
-        android:id="@+id/tvProductInfoLabel"
-        android:layout_width="wrap_content"
+    <!-- 상품 정보 섹션 타이틀 + Start 버튼 -->
+    <LinearLayout
+        android:id="@+id/layoutProductInfoHeader"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
-        android:text="@string/product_info"
-        android:textColor="#223344"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/layoutHeader" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="12dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader">
 
-    <!-- Control Buttons Area - 4 per row using GridLayout -->
+        <TextView
+            android:id="@+id/tvProductInfoLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/product_info"
+            android:textColor="#1976D2"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_scan_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:backgroundTint="#1976D2"
+            android:text="Start"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:paddingHorizontal="16dp"
+            android:minWidth="72dp"
+            app:cornerRadius="6dp" />
+    </LinearLayout>
+
+    <!-- 상품 정보 카드 -->
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/cardButtons"
+        android:id="@+id/cardProductInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="12dp"
-        android:layout_marginTop="8dp"
         app:cardBackgroundColor="#FFFFFF"
         app:cardCornerRadius="@dimen/card_radius"
         app:cardElevation="2dp"
         app:strokeColor="#1976D2"
         app:strokeWidth="1dp"
-        app:layout_constraintTop_toBottomOf="@id/tvProductInfoLabel">
+        app:layout_constraintTop_toBottomOf="@id/layoutProductInfoHeader">
 
-        <GridLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:columnCount="4"
-            android:padding="8dp"
-            android:useDefaultMargins="true">
+            android:orientation="vertical"
+            android:padding="14dp"
+            android:minHeight="100dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_beacon_query"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:text="Query"
-                android:textAllCaps="false"
-                android:textColor="#1976D2"
-                android:textSize="11sp"
-                android:paddingHorizontal="4dp"
-                app:cornerRadius="4dp"
-                app:strokeColor="#1976D2" />
+            <!-- 스캔 안내 (스캔 전) -->
+            <LinearLayout
+                android:id="@+id/layoutScanGuide"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="visible">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_beacon_start"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:backgroundTint="#4CAF50"
-                android:text="Start"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:paddingHorizontal="4dp"
-                app:cornerRadius="4dp" />
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/round_signal_cellular_alt_24"
+                    app:tint="#BDBDBD"
+                    android:layout_marginBottom="6dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_beacon_stop"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:backgroundTint="#F44336"
-                android:text="Stop"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:paddingHorizontal="4dp"
-                app:cornerRadius="4dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/scan_guide"
+                    android:textColor="#757575"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_master_scan_config"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:text="@string/scan_config"
-                android:textAllCaps="false"
-                android:textColor="#1976D2"
-                android:textSize="11sp"
-                android:paddingHorizontal="4dp"
-                app:cornerRadius="4dp"
-                app:strokeColor="#1976D2" />
+            <!-- 로딩 중 (조회 중) -->
+            <LinearLayout
+                android:id="@+id/layoutProductLoading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:visibility="gone">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_master_scan"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:backgroundTint="#1976D2"
-                android:text="Scan"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:paddingHorizontal="4dp"
-                app:cornerRadius="4dp" />
+                <ProgressBar
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:indeterminate="true"
+                    android:layout_marginBottom="8dp" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_master_scanStop"
-                android:layout_width="0dp"
-                android:layout_height="44dp"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:backgroundTint="#FF9800"
-                android:text="@string/stop_scan"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFF"
-                android:textSize="11sp"
-                android:paddingHorizontal="4dp"
-                app:cornerRadius="4dp" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/loading_product"
+                    android:textColor="#1976D2"
+                    android:textSize="14sp" />
+            </LinearLayout>
 
-        </GridLayout>
+            <!-- 상품 정보 (스캔 후) -->
+            <LinearLayout
+                android:id="@+id/layoutProductDetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvOrderNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="주문번호: 260115143"
+                    android:textColor="#757575"
+                    android:textSize="12sp"
+                    android:layout_marginBottom="6dp" />
+
+                <TextView
+                    android:id="@+id/tvProductName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="나이키알파플라이3"
+                    android:textColor="#212121"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="6dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/tvProductOption"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="265 / 블랙"
+                        android:textColor="#424242"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/tvProductPrice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="349,000원"
+                        android:textColor="#1976D2"
+                        android:textSize="17sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Device List Label - 결제 대기고객 -->
+    <!-- Device List Label - 결제 대기고객 (파란색) -->
     <TextView
         android:id="@+id/tvDeviceListLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="14dp"
         android:text="@string/waiting_customers"
-        android:textColor="#223344"
-        android:textSize="14sp"
+        android:textColor="#1976D2"
+        android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cardButtons" />
+        app:layout_constraintTop_toBottomOf="@id/cardProductInfo" />
 
     <!-- Device List Card -->
     <com.google.android.material.card.MaterialCardView
@@ -190,7 +224,7 @@
         app:strokeWidth="1dp"
         app:layout_constraintTop_toBottomOf="@id/tvDeviceListLabel"
         app:layout_constraintBottom_toTopOf="@id/layoutBottomBar"
-        app:layout_constraintHeight_min="150dp">
+        app:layout_constraintHeight_min="100dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycler_view"
@@ -217,7 +251,7 @@
             android:id="@+id/viewStatusIndicator"
             android:layout_width="10dp"
             android:layout_height="10dp"
-            android:background="@drawable/circle_red" />
+            android:background="@drawable/circle_gray" />
 
         <TextView
             android:id="@+id/tvBottomStatus"
@@ -225,8 +259,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
             android:layout_weight="1"
-            android:text="연결 안됨"
-            android:textColor="#F44336"
+            android:text="@string/status_waiting"
+            android:textColor="#757575"
             android:textSize="13sp"
             android:textStyle="bold" />
 

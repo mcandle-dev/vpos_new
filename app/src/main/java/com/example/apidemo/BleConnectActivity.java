@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.apidemo.ble.BleConnection;
 import com.example.apidemo.model.Member;
+import com.example.apidemo.model.Order;
 import com.mcandle.vpos.R;
 
 /**
@@ -26,6 +27,9 @@ public class BleConnectActivity extends AppCompatActivity {
     public static final String EXTRA_DEVICE_MAC = "EXTRA_DEVICE_MAC";
     public static final String EXTRA_DEVICE_NAME = "EXTRA_DEVICE_NAME";
     public static final String EXTRA_SERVICE_UUID = "EXTRA_SERVICE_UUID";
+    public static final String EXTRA_PHONE_NUMBER = "EXTRA_PHONE_NUMBER";
+    public static final String EXTRA_CARD_NUMBER = "EXTRA_CARD_NUMBER";
+    public static final String EXTRA_ORDER = "EXTRA_ORDER";
 
     // Views
     private TextView tvCustomerNameLabel;
@@ -42,7 +46,11 @@ public class BleConnectActivity extends AppCompatActivity {
     private String deviceName;
     private String serviceUuid;
     private Member member;
+    private Order order;
     private BleConnection bleConnection;
+
+    // Static BleConnection to share with PaymentActivity
+    private static BleConnection sharedBleConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +66,14 @@ public class BleConnectActivity extends AppCompatActivity {
         deviceMac = getIntent().getStringExtra(EXTRA_DEVICE_MAC);
         deviceName = getIntent().getStringExtra(EXTRA_DEVICE_NAME);
         serviceUuid = getIntent().getStringExtra(EXTRA_SERVICE_UUID);
+        String phoneNumber = getIntent().getStringExtra(EXTRA_PHONE_NUMBER);
+        String cardNumber = getIntent().getStringExtra(EXTRA_CARD_NUMBER);
+        order = (Order) getIntent().getSerializableExtra(EXTRA_ORDER);
+
+        // Initialize order if not provided
+        if (order == null) {
+            order = new Order();
+        }
 
         // Initialize member with hardcoded data (to be fetched from server in future)
         member = new Member();
@@ -65,8 +81,17 @@ public class BleConnectActivity extends AppCompatActivity {
             member.setServiceUuid(serviceUuid);
         }
 
+        // Set memberCode (phone number) and cardNumber from parsed UUID
+        if (phoneNumber != null && !phoneNumber.isEmpty()) {
+            member.setMemberCode(phoneNumber);
+        }
+        if (cardNumber != null && !cardNumber.isEmpty()) {
+            member.setCardNumber(cardNumber);
+        }
+
         // Initialize BLE connection
         bleConnection = new BleConnection();
+        sharedBleConnection = bleConnection;
 
         // Initialize views
         initViews();
@@ -96,15 +121,11 @@ public class BleConnectActivity extends AppCompatActivity {
     }
 
     private void displayMemberInfo() {
-        // Display customer name
+        // Display customer name: "김준호 (2200)님"
         tvCustomerNameLabel.setText(member.getDisplayName());
 
-        // Display grade and member ID (or serviceUUID if available)
-        if (member.getServiceUuid() != null && !member.getServiceUuid().isEmpty()) {
-            tvDeviceMac.setText(member.getGrade() + " ⭐ | " + member.getServiceUuid());
-        } else {
-            tvDeviceMac.setText(member.getDisplayGradeInfo());
-        }
+        // Display grade and card number: "VIP | 9410-1234-5678-9012"
+        tvDeviceMac.setText(member.getDisplayCardInfo());
 
         // Display points
         tvCustomerPointsValue.setText(member.getDisplayPoints());
@@ -138,8 +159,8 @@ public class BleConnectActivity extends AppCompatActivity {
             tvBottomStatus.setTextColor(Color.parseColor("#FF9800"));
 
             new Thread(() -> {
-                // Send order_id=1234 via BLE
-                String sendData = "order_id=1234";
+                // Send order_id with actual order ID via BLE
+                String sendData = "order_id=" + order.getOrderId();
                 Log.d(TAG, "Sending BLE data: " + sendData);
 
                 BleConnection.SendResult result = bleConnection.sendDataCompleteByMservice(sendData, 4000);
@@ -155,8 +176,8 @@ public class BleConnectActivity extends AppCompatActivity {
                         // Navigate to PaymentActivity
                         Intent intent = new Intent(BleConnectActivity.this, PaymentActivity.class);
                         intent.putExtra("EXTRA_MODE", "APP");
-                        intent.putExtra("EXTRA_AMOUNT", 349000); // Original price
-                        intent.putExtra("EXTRA_PRODUCT_NAME", "스포츠 상품");
+                        intent.putExtra("EXTRA_AMOUNT", order.getProdPrice());
+                        intent.putExtra("EXTRA_PRODUCT_NAME", order.getProdName());
                         startActivity(intent);
                     } else {
                         Log.e(TAG, "BLE send failed: " + result.getError());
@@ -228,5 +249,13 @@ public class BleConnectActivity extends AppCompatActivity {
         if (bleConnection != null && bleConnection.isConnected()) {
             new Thread(() -> bleConnection.disconnect()).start();
         }
+    }
+
+    /**
+     * Get shared BleConnection for PaymentActivity
+     * @return BleConnection instance or null
+     */
+    public static BleConnection getSharedBleConnection() {
+        return sharedBleConnection;
     }
 }

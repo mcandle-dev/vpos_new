@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Company ID"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etCompanyId"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="예: 4C00"
+        android:inputType="textCapCharacters"
+        android:textSize="16sp"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Major UUID"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etMajorUuid"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="예: 0708"
+        android:inputType="textCapCharacters"
+        android:textSize="16sp"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Minor UUID"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etMinorUuid"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="예: 0506"
+        android:inputType="textCapCharacters"
+        android:textSize="16sp"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Custom UUID"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:textColor="#333333"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/etCustomUuid"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:hint="예: 0112233445566778899AABBCCDDEEFF0"
+        android:inputType="textCapCharacters"
+        android:textSize="14sp"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp" />
+
+</LinearLayout>

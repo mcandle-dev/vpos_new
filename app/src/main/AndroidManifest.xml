@@ -24,7 +24,7 @@
         <activity
             android:name="com.example.apidemo.BeaconActivity"
             android:exported="true"
-            android:label="Beacon">
+            android:label="VPOS">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -43,6 +43,10 @@
             android:name="com.example.apidemo.SuccessActivity"
             android:exported="false"
             android:label="Success" />
+        <activity
+            android:name="com.example.apidemo.SettingsActivity"
+            android:exported="false"
+            android:label="Settings" />
 
         <receiver
             android:name="com.example.apidemo.receiver.BootReceiver"

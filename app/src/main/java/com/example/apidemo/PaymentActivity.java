@@ -2,6 +2,7 @@ package com.example.apidemo;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -10,12 +11,16 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.apidemo.ble.BleConnection;
+
 import java.text.NumberFormat;
 import java.util.Locale;
 
 import com.mcandle.vpos.R;
 
 public class PaymentActivity extends AppCompatActivity {
+
+    private static final String TAG = "PaymentActivity";
 
     private TextView tvPaymentTitle;
     private TextView tvPaymentAmount;
@@ -29,6 +34,7 @@ public class PaymentActivity extends AppCompatActivity {
     private String mode;
     private int amount;
     private String productName;
+    private BleConnection bleConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +54,9 @@ public class PaymentActivity extends AppCompatActivity {
         productName = getIntent().getStringExtra("EXTRA_PRODUCT_NAME");
         if (productName == null) productName = "상품";
 
+        // Get shared BLE connection
+        bleConnection = BleConnectActivity.getSharedBleConnection();
+
         // Initialize views
         tvPaymentTitle = findViewById(R.id.tvPaymentTitle);
         tvPaymentAmount = findViewById(R.id.tvPaymentAmount);
@@ -63,7 +72,7 @@ public class PaymentActivity extends AppCompatActivity {
         btnBack.setOnClickListener(v -> finish());
 
         btnCompletePayment.setOnClickListener(v -> {
-            navigateToSuccess();
+            sendFinishNotification();
         });
 
         // Auto complete for APP mode after 2 seconds
@@ -87,6 +96,41 @@ public class PaymentActivity extends AppCompatActivity {
             tvPaymentDesc.setText("현대백화점 카드 전용 혜택 적용됨");
             btnCompletePayment.setVisibility(View.VISIBLE);
             pbWaiting.setVisibility(View.GONE);
+        }
+    }
+
+    /**
+     * Send finish notification via BLE and navigate to success screen
+     */
+    private void sendFinishNotification() {
+        // Check if BLE is connected
+        if (bleConnection != null && bleConnection.isConnected()) {
+            // Disable button to prevent multiple clicks
+            btnCompletePayment.setEnabled(false);
+            btnCompletePayment.setText("전송 중...");
+
+            new Thread(() -> {
+                // Send order_id=finish via BLE
+                String sendData = "order_id=finish";
+                Log.d(TAG, "Sending BLE data: " + sendData);
+
+                BleConnection.SendResult result = bleConnection.sendDataCompleteByMservice(sendData, 4000);
+
+                runOnUiThread(() -> {
+                    if (result.isSuccess()) {
+                        Log.d(TAG, "BLE send success");
+                        navigateToSuccess();
+                    } else {
+                        Log.e(TAG, "BLE send failed: " + result.getError());
+                        // Still navigate to success even if BLE send fails
+                        navigateToSuccess();
+                    }
+                });
+            }).start();
+        } else {
+            // No BLE connection, just navigate to success
+            Log.d(TAG, "No BLE connection, navigating to success");
+            navigateToSuccess();
         }
     }
 

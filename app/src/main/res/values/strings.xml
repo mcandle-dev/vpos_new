@@ -14,4 +14,24 @@
     <!-- Beacon Activity -->
     <string name="product_info">상품 정보</string>
     <string name="waiting_customers">결제 대기고객</string>
+
+    <!-- Settings Activity Sections -->
+    <string name="section_store_info">매장 정보</string>
+    <string name="section_ble_settings">BLE 설정</string>
+    <string name="section_beacon_settings">비콘 설정</string>
+    <string name="section_advanced_settings">고급 설정</string>
+    <string name="broadcast_name">Broadcast Name</string>
+    <string name="scan_filter_config">스캔 필터 설정</string>
+
+    <!-- Status Bar -->
+    <string name="status_waiting">대기중</string>
+    <string name="status_scanning">스캔중</string>
+    <string name="status_connecting">연결중</string>
+    <string name="status_connected">연결됨</string>
+
+    <!-- Product Info -->
+    <string name="scan_guide">바코드를 스캔해주세요</string>
+    <string name="order_number">주문번호</string>
+    <string name="loading_product">상품정보 조회중...</string>
+    <string name="loading_benefits">혜택정보 조회중...</string>
 </resources>

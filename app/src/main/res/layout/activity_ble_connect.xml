@@ -88,7 +88,7 @@
                         android:id="@+id/tvCustomerNameLabel"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="김준호 고객님 ✔"
+                        android:text="김준호 (2200)님"
                         android:textColor="#000000"
                         android:textSize="16sp"
                         android:textStyle="bold"
@@ -100,7 +100,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="4dp"
-                        android:text="VIP ⭐ | HD2023091234"
+                        android:text="VIP | 9410-1234-5678-9012"
                         android:textColor="#757575"
                         android:textSize="13sp"
                         app:layout_constraintStart_toStartOf="parent"
@@ -334,10 +334,5 @@
             android:textSize="13sp"
             android:textStyle="bold" />
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_settings"
-            app:tint="#8899AA" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

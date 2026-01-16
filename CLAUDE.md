@@ -63,24 +63,19 @@ This is an Android demo application for the VPOS 3893 device, showcasing integra
 ### Source Structure
 ```
 app/src/main/java/com/example/apidemo/
-├── MainActivity.java           - Entry point with feature selection
-├── BeaconActivity.java        - BLE Beacon/Master management (PRIMARY FEATURE)
-├── ComActivity.java           - Serial communication demo
-├── IccActivity.java           - Chip card reader demo
-├── MsrActivity.java           - Magnetic stripe reader demo
-├── PiccActivity.java          - Contactless card reader demo
-├── PrintActivity.java         - Thermal printer demo
-├── ScanActivity.java          - Barcode/QR scanner demo
-├── SysActivity.java           - System utilities (firmware update, locale)
+├── BeaconActivity.java        - BLE Master scanning & device list (LAUNCHER)
+├── BleConnectActivity.java    - Customer benefits display (혜택 안내)
+├── PaymentActivity.java       - Card payment processing
+├── SuccessActivity.java       - Payment completion screen
+├── SettingsActivity.java      - App settings & beacon control
 ├── adapter/
 │   └── DeviceAdapter.java     - RecyclerView adapter for BLE device list
-├── barcode/
-│   ├── BarcodeScanActivity.java
-│   └── QRCodeScanActivity.java
 ├── ble/
 │   ├── BleConnection.java     - AT command-based BLE connection manager
 │   ├── Device.java            - BLE device model
 │   └── DividerItemDecoration.java
+├── model/
+│   └── Member.java            - Customer/member data model
 └── receiver/
     └── BootReceiver.java      - Boot broadcast receiver
 ```
@@ -186,6 +181,7 @@ All VPOS APIs are synchronous and should be called from background threads.
 ## Storage
 
 ### SharedPreferences Keys
+- **"settingsInfo"**: Stores app settings (title, shop, salesperson)
 - **"beaconInfo"**: Stores beacon configuration (companyId, majorUuid, minorUuid, customUuid)
 - **"scanInfo"**: Stores scan filter settings (macAddress, broadcastName, rssi, manufacturerId, data)
 
@@ -202,7 +198,16 @@ All VPOS APIs are synchronous and should be called from background threads.
 ## Development Notes
 
 ### Launcher Activity
-The app is configured to launch directly to `BeaconActivity` (see AndroidManifest.xml line 46-50). `MainActivity` serves as an alternative entry point for accessing all features but is not currently exposed.
+The app launches directly to `BeaconActivity` which serves as the main BLE scanning screen.
+
+### App Flow
+```
+BeaconActivity (스캔 화면)
+    ├── SettingsActivity (설정)
+    └── BleConnectActivity (혜택 안내)
+            └── PaymentActivity (카드 결제)
+                    └── SuccessActivity (결제 완료)
+```
 
 ### Signing Configuration
 Release builds require signing keys defined in `gradle.properties`:

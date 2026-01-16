@@ -1,5 +1,406 @@
 # VPOS Beacon 앱 개발 로그
 
+## 2026-01-17 - Service UUID 파싱 개선 및 주문정보 관리 기능 추가 (v1.0.11)
+
+### 변경 개요
+- Service UUID 파싱 로직 버그 수정 (전화번호 추출 오류 해결)
+- Order 모델 추가 (주문정보 관리)
+- BLE 통신 개선 (order_id 기반 데이터 전송)
+- PaymentActivity 상태 표시 한글화 및 BLE Send 추가
+- SuccessActivity 설정 아이콘 제거
+
+---
+
+### 1. Service UUID 파싱 로직 수정
+
+#### 1.1 DeviceAdapter.java - parseServiceUuidForMembership 버그 수정
+**파일**: `app/src/main/java/com/example/apidemo/adapter/DeviceAdapter.java`
+
+**문제점**:
+- Service UUID "FB 34 9B 5F 80 00 34 12 78 56 34 12 78 56 34 12" 파싱 시
+- 카드번호는 정상: "1234 5678 1234 5678"
+- 전화번호 오류: "5934" (기대값: "1234")
+
+**원인**:
+- Little Endian 역순 처리 후 숫자만 추출하는 방식 사용
+- HEX 문자 (A-F)를 제외하고 숫자만 추출하는 과정에서 순서가 꼬임
+
+**해결**:
+```java
+// 변경 전: 숫자만 추출 방식
+StringBuilder digitsOnly = new StringBuilder();
+for (char c : reversedHex.toCharArray()) {
+    if (Character.isDigit(c)) {
+        digitsOnly.append(c);
+    }
+}
+String phoneNumber = digits.substring(digits.length() - 4);
+
+// 변경 후: HEX 문자열 직접 사용
+String reversedHex = reversed.toString();
+String cardHex = reversedHex.substring(0, 16);  // 처음 16 hex chars
+String phoneNumber = reversedHex.substring(16, 20);  // 다음 4 hex chars
+```
+
+**추가된 Public 메서드**:
+- `parsePhoneNumberFromUuid(String)` - 전화번호만 추출
+- `parseCardNumberFromUuid(String)` - 카드번호만 추출 (4자리씩 그룹핑)
+
+---
+
+### 2. 전화번호/카드번호 Intent 전달
+
+#### 2.1 BeaconActivity.java - 파싱 데이터 전달
+**파일**: `app/src/main/java/com/example/apidemo/BeaconActivity.java`
+
+**변경 사항**:
+```java
+// navigateToBleConnect() 메서드에 추가
+String phoneNumber = DeviceAdapter.parsePhoneNumberFromUuid(device.getServiceUuid());
+String cardNumber = DeviceAdapter.parseCardNumberFromUuid(device.getServiceUuid());
+
+intent.putExtra(BleConnectActivity.EXTRA_PHONE_NUMBER, phoneNumber);
+intent.putExtra(BleConnectActivity.EXTRA_CARD_NUMBER, cardNumber);
+```
+
+#### 2.2 BleConnectActivity.java - Member 객체에 할당
+**파일**: `app/src/main/java/com/example/apidemo/BleConnectActivity.java`
+
+**변경 사항**:
+```java
+// onCreate()에서 Intent 데이터 받기
+String phoneNumber = getIntent().getStringExtra(EXTRA_PHONE_NUMBER);
+String cardNumber = getIntent().getStringExtra(EXTRA_CARD_NUMBER);
+
+// Member 객체에 할당
+member.setMemberCode(phoneNumber);  // 전화번호 → memberCode
+member.setCardNumber(cardNumber);   // 카드번호
+```
+
+---
+
+### 3. Order 모델 추가
+
+#### 3.1 Order.java - 주문정보 클래스 생성
+**파일**: `app/src/main/java/com/example/apidemo/model/Order.java` (신규)
+
+**필드**:
+```java
+private String orderId;      // "260115143"
+private String prodName;     // "나이키알파플라이3"
+private String prodSize;     // "265"
+private String prodColor;    // "블랙"
+private int prodPrice;       // 349000
+```
+
+**특징**:
+- Serializable 구현으로 Intent 전달 가능
+- 기본값으로 데모 데이터 제공
+- `getDisplayOption()` - "265 / 블랙" 형식 반환
+
+---
+
+### 4. 주문정보 기반 BLE 통신
+
+#### 4.1 BeaconActivity.java - Order 객체 생성 및 전달
+**파일**: `app/src/main/java/com/example/apidemo/BeaconActivity.java`
+
+**변경 사항**:
+```java
+// navigateToBleConnect() 메서드에 추가
+Order order = new Order();  // 주문정보 생성
+intent.putExtra(BleConnectActivity.EXTRA_ORDER, order);
+```
+
+#### 4.2 BleConnectActivity.java - 앱결제 요청 시 order_id 전송
+**파일**: `app/src/main/java/com/example/apidemo/BleConnectActivity.java`
+
+**변경 전**:
+```java
+String sendData = "order_id=1234";  // 하드코딩
+```
+
+**변경 후**:
+```java
+String sendData = "order_id=" + order.getOrderId();  // 실제 주문번호 사용
+intent.putExtra("EXTRA_AMOUNT", order.getProdPrice());
+intent.putExtra("EXTRA_PRODUCT_NAME", order.getProdName());
+```
+
+**Static BleConnection 추가**:
+- PaymentActivity와 BLE 연결 공유를 위해 static 필드 추가
+- `getSharedBleConnection()` 메서드로 접근
+
+---
+
+### 5. PaymentActivity 개선
+
+#### 5.1 activity_payment.xml - 상태 표시 한글화
+**파일**: `app/src/main/res/layout/activity_payment.xml`
+
+**변경**:
+```xml
+<!-- 하단 상태바 텍스트 -->
+<TextView android:text="Connected" />  <!-- 변경 전 -->
+<TextView android:text="연결됨" />     <!-- 변경 후 -->
+```
+
+#### 5.2 PaymentActivity.java - 카드삽입완료 시 BLE Send
+**파일**: `app/src/main/java/com/example/apidemo/PaymentActivity.java`
+
+**추가 기능**:
+```java
+// 카드삽입완료 버튼 클릭 시
+btnCompletePayment.setOnClickListener(v -> {
+    sendFinishNotification();  // order_id=finish 전송
+});
+
+private void sendFinishNotification() {
+    if (bleConnection != null && bleConnection.isConnected()) {
+        String sendData = "order_id=finish";
+        BleConnection.SendResult result =
+            bleConnection.sendDataCompleteByMservice(sendData, 4000);
+
+        if (result.isSuccess()) {
+            navigateToSuccess();
+        }
+    } else {
+        navigateToSuccess();  // BLE 없어도 진행
+    }
+}
+```
+
+**특징**:
+- BLE 연결이 있으면 "order_id=finish" 전송
+- BLE 연결이 없어도 결제 완료 화면으로 이동 (비차단)
+- 전송 중 버튼 비활성화 및 "전송 중..." 표시
+
+---
+
+### 6. SuccessActivity UI 개선
+
+#### 6.1 activity_success.xml - 설정 아이콘 제거
+**파일**: `app/src/main/res/layout/activity_success.xml`
+
+**변경**:
+```xml
+<!-- 하단 상태바에서 제거 -->
+<ImageView
+    android:src="@drawable/ic_settings"
+    app:tint="#8899AA" />  <!-- 삭제됨 -->
+```
+
+**이유**: 결제 완료 화면에서는 설정 접근이 불필요함
+
+---
+
+### 7. BLE 통신 플로우
+
+```
+BeaconActivity
+    ↓ (디바이스 선택)
+    ↓ Order 생성: orderId="260115143"
+    ↓
+BleConnectActivity
+    ↓ (앱결제 버튼 클릭)
+    ↓ BLE Send: "order_id=260115143"
+    ↓
+PaymentActivity (APP 모드)
+    ↓ (자동 완료 후 이동)
+    ↓
+SuccessActivity
+
+---
+
+BeaconActivity
+    ↓ (디바이스 선택)
+    ↓
+BleConnectActivity
+    ↓ (카드결제 버튼 클릭)
+    ↓
+PaymentActivity (OFFLINE 모드)
+    ↓ (카드삽입완료 버튼 클릭)
+    ↓ BLE Send: "order_id=finish"
+    ↓
+SuccessActivity
+```
+
+---
+
+### 8. 변경 파일 목록
+
+| 파일 | 변경 내용 |
+|------|----------|
+| **DeviceAdapter.java** | parseServiceUuidForMembership 로직 수정, public 메서드 추가 |
+| **BeaconActivity.java** | 전화번호/카드번호/Order Intent 전달 |
+| **BleConnectActivity.java** | Member 할당, Order 수신, order_id 전송, static BleConnection |
+| **PaymentActivity.java** | BLE Send 추가 (order_id=finish), 상태 한글화 |
+| **activity_payment.xml** | "Connected" → "연결됨" |
+| **activity_success.xml** | 설정 아이콘 제거 |
+| **Order.java** | 신규 생성 (주문정보 모델) |
+
+---
+
+### 9. 테스트 체크리스트
+
+#### Service UUID 파싱
+- [ ] UUID "FB 34 9B 5F 80 00 34 12 78 56 34 12 78 56 34 12" 입력 시
+- [ ] 전화번호: "1234" 정상 출력
+- [ ] 카드번호: "1234 5678 1234 5678" 정상 출력
+- [ ] 디바이스 목록: "1234님 (1234 5678 1234 5678)" 표시
+
+#### BLE 통신
+- [ ] 앱결제 버튼: "order_id=260115143" 전송 확인 (로그)
+- [ ] 카드삽입완료 버튼: "order_id=finish" 전송 확인 (로그)
+- [ ] BLE 연결 없을 때도 정상 동작
+
+#### UI
+- [ ] PaymentActivity 하단 상태: "연결됨" 한글 표시
+- [ ] SuccessActivity 하단 상태바: 설정 아이콘 없음
+
+---
+
+## 2026-01-16 - 설정 화면 리뉴얼 및 고객정보 표시 개선 (v1.0.10)
+
+### 변경 개요
+- SettingsActivity 완전 리뉴얼 (별도 Activity로 분리)
+- BleConnectActivity 고객정보 표시 형식 변경
+- Member 모델에 memberCode, cardNumber 필드 추가
+- 비콘 제어 기능 설정 화면으로 이동
+
+---
+
+### 1. SettingsActivity 리뉴얼
+
+#### 1.1 activity_settings.xml - 새 레이아웃
+**파일**: `app/src/main/res/layout/activity_settings.xml`
+
+**구조 변경**:
+- ConstraintLayout + MaterialCardView → ScrollView + LinearLayout
+- 간결한 EditText 스타일 적용
+- 섹션별 구분선으로 가독성 향상
+
+**섹션 구성**:
+```
+├── Header (← 뒤로가기 + "설정" 타이틀)
+├── 매장 정보 섹션
+│   ├── Title (타이틀)
+│   ├── Shop (매장명)
+│   └── Salesperson (판매원)
+├── BLE 설정 섹션
+│   └── Broadcast Name
+├── 비콘 설정 섹션
+│   ├── Query / Start / Stop 버튼
+│   └── 스캔 필터 설정 버튼
+├── 고급 설정 섹션
+│   └── Config / UUID / Slave 버튼
+└── 저장 버튼
+```
+
+#### 1.2 SettingsActivity.java - 기능 추가
+**파일**: `app/src/main/java/com/example/apidemo/SettingsActivity.java`
+
+**새로운 기능**:
+- `queryBeaconParams()` - At.Lib_GetBeaconParams() 호출
+- `startBeacon()` - At.Lib_EnableBeacon(true)
+- `stopBeacon()` - At.Lib_EnableBeacon(false)
+- `showScanFilterDialog()` - 스캔 필터 설정 다이얼로그
+- `showBeaconConfigDialog()` - 비콘 파라미터 설정 다이얼로그
+
+**Handler 패턴 적용**:
+```java
+private Handler handler = new Handler(Looper.getMainLooper()) {
+    @Override
+    public void handleMessage(Message msg) {
+        switch (msg.what) {
+            case MSG_BEACON_QUERY_RESULT:
+            case MSG_BEACON_START_RESULT:
+            case MSG_BEACON_STOP_RESULT:
+            case MSG_BEACON_CONFIG_RESULT:
+        }
+    }
+};
+```
+
+---
+
+### 2. BleConnectActivity 고객정보 표시 개선
+
+#### 2.1 고객명 형식 변경
+**변경 전**: `김준호 고객님 ✔`
+**변경 후**: `김준호 (2200)님`
+
+#### 2.2 카드정보 표시 변경
+**변경 전**: `VIP ⭐ | {Service UUID}`
+**변경 후**: `VIP | 9410-1234-5678-9012`
+
+#### 2.3 설정 아이콘 제거
+- 하단 상태바에서 설정 ImageView 제거
+- 혜택안내 화면에서는 설정 접근 불필요
+
+---
+
+### 3. Member 모델 확장
+
+#### 3.1 Member.java - 새 필드 추가
+**파일**: `app/src/main/java/com/example/apidemo/model/Member.java`
+
+**추가된 필드**:
+```java
+private String memberCode;   // "2200"
+private String cardNumber;   // "9410-1234-5678-9012"
+```
+
+**추가된 메서드**:
+```java
+// "김준호 (2200)님" 형식
+public String getDisplayName() {
+    return name + " (" + memberCode + ")님";
+}
+
+// "VIP | 9410-1234-5678-9012" 형식
+public String getDisplayCardInfo() {
+    return grade + " | " + cardNumber;
+}
+```
+
+---
+
+### 4. 새로 생성된 리소스 파일
+
+| 파일 | 용도 |
+|------|------|
+| `drawable/edit_text_background.xml` | EditText 배경 (흰색, 둥근 모서리) |
+| `drawable/ic_arrow_back.xml` | 뒤로가기 화살표 아이콘 |
+| `layout/dialog_beacon_settings.xml` | 비콘 설정 다이얼로그 레이아웃 |
+
+---
+
+### 5. 변경 파일 목록
+
+| 파일 | 변경 내용 |
+|------|----------|
+| SettingsActivity.java | 완전 리뉴얼 - 비콘 제어 기능 추가 |
+| activity_settings.xml | 새 레이아웃 적용 |
+| BleConnectActivity.java | displayMemberInfo() 수정 |
+| activity_ble_connect.xml | 설정 아이콘 제거, placeholder 텍스트 변경 |
+| Member.java | memberCode, cardNumber 필드 및 메서드 추가 |
+| dialog_beacon_settings.xml | 신규 생성 |
+| edit_text_background.xml | 신규 생성 |
+| ic_arrow_back.xml | 신규 생성 |
+
+---
+
+### 6. VPOS API 사용 메서드
+
+| 메서드 | 용도 |
+|--------|------|
+| `At.Lib_GetBeaconParams(beacon)` | 비콘 파라미터 조회 |
+| `At.Lib_SetBeaconParams(beacon)` | 비콘 파라미터 설정 |
+| `At.Lib_EnableBeacon(true/false)` | 비콘 시작/정지 |
+
+---
+
 ## 2026-01-15 - UI 개선 및 Broadcast Name 설정 추가 (v1.0.9)
 
 ### 변경 개요

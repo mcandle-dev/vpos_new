@@ -40,9 +40,75 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
     /**
      * Service UUID에서 멤버십 정보 파싱
      * 예: "FB 34 9B 5F 80 00 34 12 78 56 34 12 78 56 34 12"
-     * Little Endian 역순 처리 후 카드번호(앞 16자리), 전화번호(뒤 4자리) 추출
+     * Little Endian 역순 처리 후:
+     *   - 카드번호: 처음 16 hex chars (8바이트) → "1234 5678 1234 5678"
+     *   - 전화번호: 다음 4 hex chars (2바이트) → "1234"
      * 출력: "1234님 (1234 5678 1234 5678)"
      */
+    /**
+     * Service UUID에서 전화번호 추출
+     * @param serviceUuid Service UUID 문자열
+     * @return 전화번호 (예: "1234") 또는 null
+     */
+    public static String parsePhoneNumberFromUuid(String serviceUuid) {
+        if (serviceUuid == null || serviceUuid.isEmpty()) {
+            return null;
+        }
+
+        try {
+            String hexString = serviceUuid.replace(" ", "").trim();
+            if (hexString.length() < 20) {
+                return null;
+            }
+
+            // Little Endian 역순 처리
+            StringBuilder reversed = new StringBuilder();
+            for (int i = hexString.length() - 2; i >= 0; i -= 2) {
+                reversed.append(hexString.substring(i, i + 2));
+            }
+
+            // 전화번호: 16번째부터 4 hex chars (2바이트)
+            return reversed.substring(16, 20);
+        } catch (Exception e) {
+            Log.e("DeviceAdapter", "parsePhoneNumberFromUuid error: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Service UUID에서 카드번호 추출
+     * @param serviceUuid Service UUID 문자열
+     * @return 카드번호 (예: "1234 5678 1234 5678") 또는 null
+     */
+    public static String parseCardNumberFromUuid(String serviceUuid) {
+        if (serviceUuid == null || serviceUuid.isEmpty()) {
+            return null;
+        }
+
+        try {
+            String hexString = serviceUuid.replace(" ", "").trim();
+            if (hexString.length() < 20) {
+                return null;
+            }
+
+            // Little Endian 역순 처리
+            StringBuilder reversed = new StringBuilder();
+            for (int i = hexString.length() - 2; i >= 0; i -= 2) {
+                reversed.append(hexString.substring(i, i + 2));
+            }
+
+            // 카드번호: 처음 16 hex chars (8바이트)를 4자리씩 그룹핑
+            String cardHex = reversed.substring(0, 16);
+            return cardHex.substring(0, 4) + " " +
+                   cardHex.substring(4, 8) + " " +
+                   cardHex.substring(8, 12) + " " +
+                   cardHex.substring(12, 16);
+        } catch (Exception e) {
+            Log.e("DeviceAdapter", "parseCardNumberFromUuid error: " + e.getMessage());
+            return null;
+        }
+    }
+
     private String parseServiceUuidForMembership(String serviceUuid) {
         if (serviceUuid == null || serviceUuid.isEmpty()) {
             return "정보 없음";
@@ -52,8 +118,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             // 공백 제거 및 HEX 문자열 정리
             String hexString = serviceUuid.replace(" ", "").trim();
 
-            // 최소 길이 확인 (16바이트 = 32 hex chars)
-            if (hexString.length() < 32) {
+            // 최소 길이 확인 (10바이트 = 20 hex chars: 8바이트 카드번호 + 2바이트 전화번호)
+            if (hexString.length() < 20) {
                 return "데이터 부족";
             }
 
@@ -65,30 +131,15 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
             String reversedHex = reversed.toString();
 
-            // 숫자만 추출
-            StringBuilder digitsOnly = new StringBuilder();
-            for (char c : reversedHex.toCharArray()) {
-                if (Character.isDigit(c)) {
-                    digitsOnly.append(c);
-                }
-            }
+            // 카드번호: 처음 16 hex chars (8바이트)
+            String cardHex = reversedHex.substring(0, 16);
+            String cardNumber = cardHex.substring(0, 4) + " " +
+                               cardHex.substring(4, 8) + " " +
+                               cardHex.substring(8, 12) + " " +
+                               cardHex.substring(12, 16);
 
-            String digits = digitsOnly.toString();
-
-            if (digits.length() < 20) {
-                // 충분한 숫자가 없으면 원본 데이터 표시
-                return serviceUuid.length() > 20 ? serviceUuid.substring(0, 20) + "..." : serviceUuid;
-            }
-
-            // 전화번호: 뒤 4자리
-            String phoneNumber = digits.substring(digits.length() - 4);
-
-            // 카드번호: 앞 16자리를 4자리씩 그룹핑
-            String cardDigits = digits.substring(0, 16);
-            String cardNumber = cardDigits.substring(0, 4) + " " +
-                               cardDigits.substring(4, 8) + " " +
-                               cardDigits.substring(8, 12) + " " +
-                               cardDigits.substring(12, 16);
+            // 전화번호: 다음 4 hex chars (2바이트)
+            String phoneNumber = reversedHex.substring(16, 20);
 
             return phoneNumber + "님 (" + cardNumber + ")";
 

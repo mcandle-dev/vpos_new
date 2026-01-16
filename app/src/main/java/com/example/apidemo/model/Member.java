@@ -7,25 +7,31 @@ package com.example.apidemo.model;
 public class Member {
     private String name;
     private String memberId;
+    private String memberCode;   // Short code like "2200"
     private String grade;        // VIP, GOLD, SILVER, etc.
     private int points;
+    private String cardNumber;   // Card number like "9410-1234-5678-9012"
     private String serviceUuid;
 
     // Default constructor with hardcoded demo data
     public Member() {
         this.name = "김준호";
         this.memberId = "HD2023091234";
+        this.memberCode = "2200";
         this.grade = "VIP";
         this.points = 125000;
+        this.cardNumber = "9410-1234-5678-9012";
         this.serviceUuid = "";
     }
 
     // Constructor with all fields
-    public Member(String name, String memberId, String grade, int points, String serviceUuid) {
+    public Member(String name, String memberId, String memberCode, String grade, int points, String cardNumber, String serviceUuid) {
         this.name = name;
         this.memberId = memberId;
+        this.memberCode = memberCode;
         this.grade = grade;
         this.points = points;
+        this.cardNumber = cardNumber;
         this.serviceUuid = serviceUuid;
     }
 
@@ -50,6 +56,14 @@ public class Member {
         return serviceUuid;
     }
 
+    public String getMemberCode() {
+        return memberCode;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
     // Setters
     public void setName(String name) {
         this.name = name;
@@ -71,12 +85,25 @@ public class Member {
         this.serviceUuid = serviceUuid;
     }
 
-    // Display formatted customer name
-    public String getDisplayName() {
-        return name + " 고객님 ✔";
+    public void setMemberCode(String memberCode) {
+        this.memberCode = memberCode;
     }
 
-    // Display formatted grade and member ID
+    public void setCardNumber(String cardNumber) {
+        this.cardNumber = cardNumber;
+    }
+
+    // Display formatted customer name: "김준호 (2200)님"
+    public String getDisplayName() {
+        return name + " (" + memberCode + ")님";
+    }
+
+    // Display formatted grade and card number: "VIP | 9410-1234-5678-9012"
+    public String getDisplayCardInfo() {
+        return grade + " | " + cardNumber;
+    }
+
+    // Display formatted grade and member ID (legacy)
     public String getDisplayGradeInfo() {
         return grade + " ⭐ | " + memberId;
     }
