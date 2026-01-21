@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "3893ApiDemo"
+rootProject.name = "VPOS"
 include ':app'

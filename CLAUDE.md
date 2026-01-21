@@ -50,7 +50,7 @@ This is an Android demo application for the VPOS 3893 device, showcasing integra
 - **Compile SDK**: 34
 - **Java Version**: 11
 - **Application ID**: com.example.apidemo
-- **Project Name**: 3893ApiDemo
+- **Project Name**: VPOS
 
 ### Core Dependencies
 - **VPOS Library**: `app/libs/libVpos3893_release_20251202.aar` - Proprietary SDK for hardware control

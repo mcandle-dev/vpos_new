@@ -57,6 +57,7 @@
     </RelativeLayout>
 
     <ScrollView
+        android:id="@+id/scrollViewContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
@@ -304,6 +305,69 @@
             </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </ScrollView>
+
+    <!-- App Payment Waiting Screen (initially hidden) -->
+    <LinearLayout
+        android:id="@+id/layoutWaitingScreen"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/layoutBottomBar"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader">
+
+        <!-- Phone Screen Icon -->
+        <ImageView
+            android:id="@+id/ivPhoneIcon"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@drawable/ic_smartphone"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Confirmation Message -->
+        <TextView
+            android:id="@+id/tvWaitingMessage1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="고객 앱으로 주문 정보가\n전송되었습니다"
+            android:textSize="18sp"
+            android:textColor="#000000"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Animated Dots -->
+        <TextView
+            android:id="@+id/tvAnimatedDots"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="..."
+            android:textSize="24sp"
+            android:textColor="#2196F3"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Waiting Message -->
+        <TextView
+            android:id="@+id/tvWaitingMessage2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="고객이 앱에서 결제 중입니다..."
+            android:textSize="16sp"
+            android:textColor="#666666"
+            android:gravity="center"
+            android:layout_marginBottom="32dp" />
+
+        <!-- Cancel Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancelWaiting"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="취소하고 다시 진행"
+            android:textSize="16sp"
+            android:backgroundTint="#1976D2"
+            app:cornerRadius="6dp" />
+    </LinearLayout>
 
     <!-- Bottom Status Bar -->
     <LinearLayout

@@ -57,7 +57,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
         try {
             String hexString = serviceUuid.replace(" ", "").trim();
-            if (hexString.length() < 20) {
+            if (hexString.length() < 24) {
                 return null;
             }
 
@@ -67,8 +67,9 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                 reversed.append(hexString.substring(i, i + 2));
             }
 
-            // 전화번호: 16번째부터 4 hex chars (2바이트)
-            return reversed.substring(16, 20);
+            // 전화번호: position 20-24의 4 hex chars (2바이트)
+            String reversedHex = reversed.toString();
+            return reversedHex.substring(20, 24);
         } catch (Exception e) {
             Log.e("DeviceAdapter", "parsePhoneNumberFromUuid error: " + e.getMessage());
             return null;
@@ -87,7 +88,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
 
         try {
             String hexString = serviceUuid.replace(" ", "").trim();
-            if (hexString.length() < 20) {
+            if (hexString.length() < 24) {
                 return null;
             }
 
@@ -118,8 +119,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             // 공백 제거 및 HEX 문자열 정리
             String hexString = serviceUuid.replace(" ", "").trim();
 
-            // 최소 길이 확인 (10바이트 = 20 hex chars: 8바이트 카드번호 + 2바이트 전화번호)
-            if (hexString.length() < 20) {
+            // 최소 길이 확인 (12바이트 = 24 hex chars: 8바이트 카드번호 + 2바이트 빈공간 + 2바이트 전화번호)
+            if (hexString.length() < 24) {
                 return "데이터 부족";
             }
 
@@ -138,8 +139,8 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
                                cardHex.substring(8, 12) + " " +
                                cardHex.substring(12, 16);
 
-            // 전화번호: 다음 4 hex chars (2바이트)
-            String phoneNumber = reversedHex.substring(16, 20);
+            // 전화번호: position 20-24의 4 hex chars (2바이트)
+            String phoneNumber = reversedHex.substring(20, 24);
 
             return phoneNumber + "님 (" + cardNumber + ")";
 
@@ -148,6 +149,23 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             return serviceUuid != null && serviceUuid.length() > 20 ?
                    serviceUuid.substring(0, 20) + "..." : (serviceUuid != null ? serviceUuid : "정보 없음");
         }
+    }
+
+    /**
+     * Check if parsed membership info is valid (not error messages)
+     * @param membershipInfo Parsed membership info string
+     * @return true if valid format (e.g., "2201님 (1234 5678...)"), false if error message
+     */
+    private boolean isValidMembershipInfo(String membershipInfo) {
+        if (membershipInfo == null) return false;
+
+        // Valid format: "####님 (#### #### #### ####)"
+        // Invalid: "정보 없음", "데이터 부족", raw UUID strings, truncated strings with "..."
+        return membershipInfo.contains("님 (") &&
+               membershipInfo.contains(")") &&
+               !membershipInfo.equals("정보 없음") &&
+               !membershipInfo.equals("데이터 부족") &&
+               !membershipInfo.contains("...");
     }
 
     @NonNull
@@ -234,9 +252,24 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.DeviceView
             if (device.getDeviceName() == null || device.getDeviceName().isEmpty()) {
                 device.setDeviceName(deviceList.get(position).getDeviceName());
             }
+
+            // UUID preservation logic: prevent overwriting valid membership info with error messages
             if (device.getServiceUuid() == null || device.getServiceUuid().isEmpty()) {
+                // New UUID is empty - keep old
                 device.setServiceUuid(deviceList.get(position).getServiceUuid());
+            } else {
+                // Check if we're about to overwrite valid data with invalid data
+                String oldServiceUuid = deviceList.get(position).getServiceUuid();
+                String oldParsed = parseServiceUuidForMembership(oldServiceUuid);
+                String newParsed = parseServiceUuidForMembership(device.getServiceUuid());
+
+                if (isValidMembershipInfo(oldParsed) && !isValidMembershipInfo(newParsed)) {
+                    // OLD data is valid, NEW data is error - keep OLD
+                    device.setServiceUuid(oldServiceUuid);
+                }
+                // Otherwise use new UUID as normal
             }
+
             deviceList.set(position, device);
             notifyItemChanged(position);
         } else {

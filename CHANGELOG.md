@@ -1,5 +1,186 @@
 # VPOS Beacon 앱 개발 로그
 
+## 2026-01-22 - 대기 화면 추가 및 UI/UX 개선 (v1.0.12)
+
+### 변경 개요
+- 앱결제 대기 화면 추가 (애니메이션 포함)
+- 스캔 상태 기반 상태 표시 개선
+- 할인율 및 카드정보 전달 개선
+- 주석 처리된 코드 정리
+- 아이콘 리소스 업데이트
+
+---
+
+### 1. 앱결제 대기 화면 추가
+
+#### 1.1 BleConnectActivity.java - ViewState 및 대기 화면 구현
+**파일**: `app/src/main/java/com/example/apidemo/BleConnectActivity.java`
+
+**추가된 기능**:
+```java
+// ViewState enum 추가
+private enum ViewState {
+    BENEFITS,    // 혜택 안내 화면
+    WAITING      // 앱결제 대기 화면
+}
+```
+
+**대기 화면 구성**:
+- "결제 진행 중..." 메시지
+- 애니메이션 점 표시 (···)
+- "취소" 버튼으로 혜택 화면 복귀
+
+**애니메이션 처리**:
+```java
+private Handler dotsAnimationHandler;
+private Runnable dotsAnimationRunnable;
+// 점 개수를 1개 → 2개 → 3개 → 1개 순환
+```
+
+#### 1.2 activity_ble_connect.xml - 대기 화면 레이아웃 추가
+**파일**: `app/src/main/res/layout/activity_ble_connect.xml`
+
+**추가된 뷰**:
+```xml
+<LinearLayout id="layoutWaitingScreen" visibility="gone">
+    <TextView text="결제 진행 중..." />
+    <TextView id="tvAnimatedDots" text="···" />
+    <Button id="btnCancelWaiting" text="취소" />
+</LinearLayout>
+```
+
+---
+
+### 2. 스캔 상태 기반 상태 표시 개선
+
+#### 2.1 BeaconActivity.java - onResume 시 상태 업데이트
+**파일**: `app/src/main/java/com/example/apidemo/BeaconActivity.java`
+
+**추가된 메서드**:
+```java
+private void updateStatusBasedOnScanState() {
+    if (startScan) {
+        updateStatus(Status.SCANNING);  // 스캔 중
+    } else {
+        updateStatus(Status.WAITING);   // 대기 중
+    }
+}
+```
+
+**개선 효과**:
+- 다른 화면에서 돌아왔을 때 정확한 상태 표시
+- CONNECTING 상태가 부적절하게 표시되는 문제 해결
+
+---
+
+### 3. 할인율 및 결제 정보 전달 개선
+
+#### 3.1 BleConnectActivity.java - 카드결제 Intent 데이터 확장
+**파일**: `app/src/main/java/com/example/apidemo/BleConnectActivity.java`
+
+**변경 사항**:
+```java
+// VIP 할인율 상수 추가
+private static final double VIP_DISCOUNT_PERCENT = 10.0;
+
+// 카드결제 시 Order 객체 및 할인 정보 전달
+intent.putExtra(EXTRA_ORDER, order);
+intent.putExtra(EXTRA_DISCOUNT_PERCENT, VIP_DISCOUNT_PERCENT);
+intent.putExtra(EXTRA_CARD_INFO, "현대백화점 카드");
+```
+
+**목적**:
+- PaymentActivity에서 주문 정보와 할인율을 일관되게 사용
+- 하드코딩된 금액 대신 Order 객체 기반 계산
+
+---
+
+### 4. 코드 정리
+
+#### 4.1 BeaconActivity.java - 주석 처리된 BLE 설정 코드 제거
+**파일**: `app/src/main/java/com/example/apidemo/BeaconActivity.java`
+
+**제거된 내용**:
+- configureBleServices_role1() 관련 주석 코드 (~130줄)
+- AT+UUID_SCAN, AT+MSERVICE, AT+RESTART 관련 실험 코드
+- 더 이상 사용하지 않는 서비스 설정 로직
+
+**효과**:
+- 코드 가독성 향상
+- 파일 크기 감소
+
+---
+
+### 5. UI 리소스 업데이트
+
+#### 5.1 아이콘 리소스 변경
+**파일**:
+- `app/src/main/res/drawable/ic_launcher_background.xml`
+- `app/src/main/res/drawable/ic_launcher_foreground.xml`
+- `app/src/main/res/drawable/ic_smartphone.xml` (신규)
+
+**변경 내용**:
+- 런처 아이콘 배경/전경 업데이트
+- 스마트폰 아이콘 추가
+
+---
+
+### 6. 기타 개선 사항
+
+#### 6.1 Order.java - 필드 추가
+**파일**: `app/src/main/java/com/example/apidemo/model/Order.java`
+
+- Order 모델 확장 (상세 내용은 git diff 참조)
+
+#### 6.2 DeviceAdapter.java - 개선
+**파일**: `app/src/main/java/com/example/apidemo/adapter/DeviceAdapter.java`
+
+- 디바이스 목록 표시 로직 개선
+
+---
+
+### 7. 변경 파일 목록
+
+| 파일 | 변경 내용 |
+|------|----------|
+| **BleConnectActivity.java** | ViewState 추가, 대기 화면 구현, 할인율/카드정보 전달 |
+| **activity_ble_connect.xml** | 대기 화면 레이아웃 추가 |
+| **BeaconActivity.java** | 스캔 상태 기반 상태 업데이트, 주석 코드 제거 |
+| **PaymentActivity.java** | Order 객체 기반 금액 처리 개선 |
+| **SuccessActivity.java** | UI 개선 |
+| **DeviceAdapter.java** | 디바이스 목록 표시 개선 |
+| **Order.java** | 모델 확장 |
+| **ic_launcher_background.xml** | 아이콘 업데이트 |
+| **ic_launcher_foreground.xml** | 아이콘 업데이트 |
+| **ic_smartphone.xml** | 신규 추가 |
+| **activity_payment.xml** | UI 개선 |
+| **activity_success.xml** | UI 개선 |
+| **settings.gradle** | 설정 업데이트 |
+| **CLAUDE.md** | 문서 업데이트 |
+| **.idea/.name** | IDE 설정 업데이트 |
+
+---
+
+### 8. 테스트 체크리스트
+
+#### 대기 화면
+- [ ] 앱결제 버튼 클릭 시 대기 화면 표시
+- [ ] 점 애니메이션 정상 작동 (1~3개 순환)
+- [ ] 취소 버튼으로 혜택 화면 복귀
+- [ ] 결제 완료 시 PaymentActivity로 이동
+
+#### 상태 표시
+- [ ] BeaconActivity 진입 시: WAITING 표시
+- [ ] 스캔 시작 시: SCANNING 표시
+- [ ] 다른 화면 갔다가 돌아올 때 상태 정확히 표시
+
+#### 할인 정보 전달
+- [ ] 카드결제 시 Order 객체 전달 확인
+- [ ] VIP 할인율 10% 적용 확인
+- [ ] 카드정보 "현대백화점 카드" 전달 확인
+
+---
+
 ## 2026-01-17 - Service UUID 파싱 개선 및 주문정보 관리 기능 추가 (v1.0.11)
 
 ### 변경 개요

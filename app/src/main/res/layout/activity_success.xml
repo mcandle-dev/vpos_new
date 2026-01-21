@@ -90,16 +90,24 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp">
-                <TextView android:text="상품" android:textColor="#8899AA" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                <TextView android:id="@+id/tvSuccessProductName" android:text="상품명" android:textColor="#223344" android:textSize="14sp" android:textStyle="bold" android:layout_alignParentEnd="true" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:text="제품명" android:textColor="#8899AA" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:id="@+id/tvSuccessProductName" android:text="나이키알파플라이3 1개" android:textColor="#223344" android:textSize="14sp" android:textStyle="bold" android:layout_alignParentEnd="true" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp">
+                <TextView android:text="카드정보" android:textColor="#8899AA" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:id="@+id/tvSuccessCardInfo" android:text="현대백화점 카드" android:textColor="#223344" android:textSize="14sp" android:textStyle="bold" android:layout_alignParentEnd="true" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
             </RelativeLayout>
 
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp">
-                <TextView android:text="결제 금액" android:textColor="#8899AA" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-                <TextView android:id="@+id/tvSuccessAmount" android:text="0원" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" android:layout_alignParentEnd="true" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:text="결제금액" android:textColor="#8899AA" android:textSize="14sp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <TextView android:id="@+id/tvSuccessAmount" android:text="314,100원" android:textColor="#000000" android:textSize="16sp" android:textStyle="bold" android:layout_alignParentEnd="true" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
             </RelativeLayout>
 
             <TextView

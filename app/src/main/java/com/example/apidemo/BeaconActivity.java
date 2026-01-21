@@ -122,6 +122,22 @@ public class BeaconActivity extends AppCompatActivity {
         super.onResume();
         // Reload settings when returning from SettingsActivity
         loadSettingsToHeader();
+
+        // Update status based on current scan state
+        updateStatusBasedOnScanState();
+    }
+
+    /**
+     * Update status indicator based on whether scan is running
+     */
+    private void updateStatusBasedOnScanState() {
+        if (startScan) {
+            // Scan is active - show SCANNING
+            updateStatus(Status.SCANNING);
+        } else {
+            // Scan is stopped - show WAITING, not CONNECTING
+            updateStatus(Status.WAITING);
+        }
     }
 
     private void initView() {
@@ -849,136 +865,6 @@ private static JSONObject parsePayload(String payload) {
 
 
 
-//            configureBleServices_role1();
-//            Log.d("VPOS", "\n[Step 4-1.5] Enabling UUID Scan (for auto UUID discovery)...");
-//            String uuidScanCmd = "AT+UUID_SCAN=0\r\n";
-//            Log.i("VPOS", "[AT CMD] >>> " + uuidScanCmd.trim());
-//            int ret = At.Lib_ComSend(uuidScanCmd.getBytes(), uuidScanCmd.length());
-//            Log.d("VPOS", "[AT CMD] Lib_ComSend returned: " + ret);
-//
-//            if (ret != 0) {
-//                Log.w("VPOS", "Failed to send UUID_SCAN command, ret: " + ret);
-//                // Don't fail - continue with connection
-//            } else {
-//                byte[] uuidScanResponse = new byte[128];
-//                int[] uuidScanLen = new int[1];
-//                ret = At.Lib_ComRecvAT(uuidScanResponse, uuidScanLen, 2000, 128);
-//                String uuidScanResponseStr = new String(uuidScanResponse, 0, uuidScanLen[0]);
-//                Log.i("VPOS", "[AT RSP] <<< " + uuidScanResponseStr.replace("\r\n", "\\r\\n"));
-//
-//                if (uuidScanResponseStr.contains("OK")) {
-//                    Log.d("VPOS", "✓ UUID Scan disabled - ");
-//                } else {
-//                    Log.w("VPOS", "UUID scan disabled failed: " + uuidScanResponseStr);
-//                }
-//            }
-//            // Check current service configuration
-//            Log.d("VPOS", "Checking current service configuration with AT+SERVICE?");
-//            String serviceCmd = "AT+MSERVICE?\r\n";
-////            String serviceCmd = "AT+ROLE=0\r\n";
-//            Log.i("VPOS", "[AT CMD] >>> " + serviceCmd.trim());
-//            ret = At.Lib_ComSend(serviceCmd.getBytes(), serviceCmd.length());
-//
-//            if (ret != 0) {
-//                Log.e("VPOS", "Failed to send AT+MSERVICE? command");
-//                return false;
-//            }
-//
-//            byte[] serviceResponse = new byte[256];
-//            int[] serviceLen = new int[1];
-//            ret = At.Lib_ComRecvAT(serviceResponse, serviceLen, 2000, 256);
-//            String serviceResponseStr = new String(serviceResponse, 0, serviceLen[0]);
-//            Log.i("VPOS", "[AT RSP] <<< " + serviceResponseStr.replace("\r\n", "\\r\\n"));
-////            if(serviceResponseStr.contains("OK")) {
-////                Log.d("VPOS", "Restarting module with AT+RESTART");
-////                String restartCmd = "AT+RESTART\r\n";
-////                Log.i("VPOS", "[AT CMD] >>> " + restartCmd.trim());
-////                ret = At.Lib_ComSend(restartCmd.getBytes(), restartCmd.length());
-////
-////                if (ret != 0) {
-////                    Log.e("VPOS", "Failed to send AT+RESTART command");
-////                    return false;
-////                }
-////
-////                // Wait for restart
-////                Log.d("VPOS", "Waiting for module to restart...");
-////                Thread.sleep(3000); // Wait 3 seconds for restart
-////                byte[] restartrsp = new byte[256];
-////                int[] restartrspLen = new int[1];
-////                ret = At.Lib_ComRecvAT(serviceResponse, serviceLen, 2000, 256);
-////                String restartrspStr = new String(serviceResponse, 0, serviceLen[0]);
-////                Log.i("VPOS", "[AT RSP] <<< " + serviceResponseStr.replace("\r\n", "\\r\\n"));
-////                Log.d("VPOS", "=== BLE Service Configuration Completed ===");
-////                return false;
-////            }
-//            // Check if services are already configured correctly
-//            boolean hasCorrectServices =
-//                                        serviceResponseStr.contains("FFF0") &&
-//                                        serviceResponseStr.contains("FFF2") &&
-//                                        serviceResponseStr.contains("FFF1");
-//
-//            if (hasCorrectServices) {
-//                Log.d("VPOS", "✓ Services already configured correctly: FFF0,FFF1,FFF2,FFF3");
-//                return true;
-//            }
-//
-//            // Configure services
-//            Log.d("VPOS", "Configuring services with AT+MSERVICE=1,FFF0,FFF1,FFF2,FFF3");
-//            String mserviceCmd = "AT+MSERVICE=1,FFF0,FFF0,FFF2,FFF1\r\n";
-//            Log.i("VPOS", "[AT CMD] >>> " + mserviceCmd.trim());
-//            ret = At.Lib_ComSend(mserviceCmd.getBytes(), mserviceCmd.length());
-//
-//            if (ret != 0) {
-//                Log.e("VPOS", "Failed to send AT+MSERVICE command");
-//                return false;
-//            }
-//
-//            byte[] mserviceResponse = new byte[256];
-//            int[] mserviceLen = new int[1];
-//            ret = At.Lib_ComRecvAT(mserviceResponse, mserviceLen, 2000, 256);
-//            String mserviceResponseStr = new String(mserviceResponse, 0, mserviceLen[0]);
-//            Log.i("VPOS", "[AT RSP] <<< " + mserviceResponseStr.replace("\r\n", "\\r\\n"));
-//
-//            if (!mserviceResponseStr.contains("OK")) {
-//                Log.e("VPOS", "Failed to configure services");
-//                return false;
-//            }
-//
-//            // Restart module
-//            Log.d("VPOS", "Restarting module with AT+RESTART");
-//            String restartCmd = "AT+RESTART\r\n";
-//            Log.i("VPOS", "[AT CMD] >>> " + restartCmd.trim());
-//            ret = At.Lib_ComSend(restartCmd.getBytes(), restartCmd.length());
-//
-//            if (ret != 0) {
-//                Log.e("VPOS", "Failed to send AT+RESTART command");
-//                return false;
-//            }
-//
-//            // Wait for restart
-//            Log.d("VPOS", "Waiting for module to restart...");
-//            Thread.sleep(1000); // Wait 3 seconds for restart
-//            byte[] restartrsp = new byte[256];
-//            int[] restartrspLen = new int[1];
-//            ret = At.Lib_ComRecvAT(restartrsp, restartrspLen, 2000, 256);
-//            String restartrspStr = new String(restartrsp, 0, restartrspLen[0]);
-//            Log.i("VPOS", "[AT RSP] <<< " + restartrspStr.replace("\r\n", "\\r\\n"));
-////            Log.d("VPOS", "=== BLE Service Configuration Completed ===");
-//            Log.d("VPOS", "=== BLE Service Configuration Completed ===");
-//            //+++
-//            String entryCmd = "+++";
-//            Log.i("VPOS", "[AT CMD] >>> " + entryCmd.trim());
-//            ret = At.Lib_ComSend(entryCmd.getBytes(), entryCmd.length());
-//
-//            if (ret != 0) {
-//                Log.e("VPOS", "Failed to send +++ command");
-//                return false;
-//            }
-//            byte[] rspEntry = new byte[256];
-//            int[] rspEntryLen = new int[1];
-//            ret = At.Lib_ComRecvAT(rspEntry, rspEntryLen, 2000, 256);
-//            String rspEntryStr = new String(rspEntry, 0, rspEntryLen[0]);
-//            Log.i("VPOS", "[AT RSP] <<< " + rspEntryStr.replace("\r\n", "\\r\\n"));
             return true;
             
         } catch (Exception e) {
@@ -987,151 +873,7 @@ private static JSONObject parsePayload(String payload) {
             return false;
         }
     }
-//    private boolean configureBleServices_role1() {
-//        Log.d("VPOS", "=== BLE Service Configuration ===");
-//
-//        try {
-//            // Check current service configuration
-//            Log.d("VPOS", "Checking current service configuration with AT+SERVICE?");
-////            String serviceCmd = "AT+MSERVICE?\r\n";
-//            String serviceCmd = "AT+ROLE=1\r\n";
-//            Log.i("VPOS", "[AT CMD] >>> " + serviceCmd.trim());
-//            int ret = At.Lib_ComSend(serviceCmd.getBytes(), serviceCmd.length());
-//
-//            if (ret != 0) {
-//                Log.e("VPOS", "Failed to send AT+SERVICE? command");
-//                return false;
-//            }
-//
-//            byte[] serviceResponse = new byte[256];
-//            int[] serviceLen = new int[1];
-//            ret = At.Lib_ComRecvAT(serviceResponse, serviceLen, 2000, 256);
-//            String serviceResponseStr = new String(serviceResponse, 0, serviceLen[0]);
-//            Log.i("VPOS", "[AT RSP] <<< " + serviceResponseStr.replace("\r\n", "\\r\\n"));
-//            if(serviceResponseStr.contains("OK")) {
-//                Log.d("VPOS", "Restarting module with AT+RESTART");
-//                String restartCmd = "AT+RESTART\r\n";
-//                Log.i("VPOS", "[AT CMD] >>> " + restartCmd.trim());
-//                ret = At.Lib_ComSend(restartCmd.getBytes(), restartCmd.length());
-//
-//                if (ret != 0) {
-//                    Log.e("VPOS", "Failed to send AT+RESTART command");
-//                    return false;
-//                }
-//
-//                // Wait for restart
-//                Log.d("VPOS", "Waiting for module to restart...");
-//                Thread.sleep(1000); // Wait 3 seconds for restart
-//                byte[] restartrsp = new byte[256];
-//                int[] restartrspLen = new int[1];
-//                ret = At.Lib_ComRecvAT(restartrsp, restartrspLen, 2000, 256);
-//                String restartrspStr = new String(restartrsp, 0, restartrspLen[0]);
-//                Log.i("VPOS", "[AT RSP] <<< " + restartrspStr.replace("\r\n", "\\r\\n"));
-//                Log.d("VPOS", "=== BLE Service Configuration Completed ===");
-//
-//                //+++
-//                String entryCmd = "+++";
-//                Log.i("VPOS", "[AT CMD] >>> " + entryCmd.trim());
-//                ret = At.Lib_ComSend(entryCmd.getBytes(), entryCmd.length());
-//
-//                if (ret != 0) {
-//                    Log.e("VPOS", "Failed to send +++ command");
-//                    return false;
-//                }
-//                byte[] rspEntry = new byte[256];
-//                int[] rspEntryLen = new int[1];
-//                ret = At.Lib_ComRecvAT(rspEntry, rspEntryLen, 1000, 256);
-//                String rspEntryStr = new String(rspEntry, 0, rspEntryLen[0]);
-//                Log.i("VPOS", "[AT RSP] <<< " + rspEntryStr.replace("\r\n", "\\r\\n"));
-//                return false;
-//            }
-//
-//
-//            Log.d("VPOS", "=== BLE Service Configuration Completed ===");
-//            return true;
-//
-//        } catch (Exception e) {
-//            Log.e("VPOS", "Service configuration error: " + e.getMessage());
-//            e.printStackTrace();
-//            return false;
-//        }
-//    }
-    //ret -1 send error,0 success,-2500 timeout.-2 not contain resPresent
-    // private  int atCmdSendrcv(String cmd,String Rsp,int timeout,int iRequestLen,String resPresent) {
-    //     // Check current service configuration
-    //     Log.d("VPOS", "Checking current cmd");
-    //     Log.i("VPOS", "[AT CMD] >>> " + cmd.trim());
-    //     int ret = At.Lib_ComSend(cmd.getBytes(), cmd.length());
 
-    //     if (ret != 0) {
-    //         Log.e("VPOS", "Failed to send  command:"+cmd.trim());
-    //         return -1;
-    //     }
-
-    //     byte[] serviceResponse = new byte[2048];
-    //     int[] serviceLen = new int[1];
-    //     int totalReceived = 0;
-    //     long startTime = System.currentTimeMillis();
-    //     long currentTime;
-
-    //     // 使用小超时时间轮询接收数据
-    //     while ((currentTime = System.currentTimeMillis()) - startTime < timeout) {
-    //         // 计算剩余超时时间
-    //         int remainingTimeout = (int) (timeout - (currentTime - startTime));
-    //         // 使用50ms作为单次接收超时时间，不超过剩余总超时时间
-    //         int singleTimeout = Math.min(50, remainingTimeout);
-            
-    //         byte[] tempBuffer = new byte[1024];
-    //         int[] tempLen = new int[1];
-    //         ret = At.Lib_ComRecvAT(tempBuffer, tempLen, singleTimeout, iRequestLen - totalReceived);
-    //         Log.e("VPOS", "At.Lib_ComRecvAT ret:"+ret);
-    //         if (tempLen[0] > 0) {
-    //             // 有数据收到，复制到总缓冲区
-    //             System.arraycopy(tempBuffer, 0, serviceResponse, totalReceived, tempLen[0]);
-    //             totalReceived += tempLen[0];
-                
-    //             // 再用10ms尝试接收更多数据
-    //             try {
-    //                 Thread.sleep(10);
-    //             } catch (InterruptedException e) {
-    //                 e.printStackTrace();
-    //             }
-                
-    //             // 尝试接收更多数据
-    //             int moreTimeout = Math.min(10, remainingTimeout - singleTimeout);
-    //             if (moreTimeout > 0) {
-    //                 byte[] moreBuffer = new byte[1024];
-    //                 int[] moreLen = new int[1];
-    //                 ret = At.Lib_ComRecvAT(moreBuffer, moreLen, moreTimeout, iRequestLen - totalReceived);
-    //                 if (moreLen[0] > 0) {
-    //                     // 还有更多数据，复制到总缓冲区
-    //                     System.arraycopy(moreBuffer, 0, serviceResponse, totalReceived, moreLen[0]);
-    //                     totalReceived += moreLen[0];
-    //                 } else {
-    //                     // 没有更多数据，结束接收
-    //                     break;
-    //                 }
-    //             }
-    //         }
-    //         // 如果还没有收到任何数据，继续尝试
-    //     }
-
-    //     serviceLen[0] = totalReceived;
-    //     String serviceResponseStr = new String(serviceResponse, 0, totalReceived);
-    //     if(Rsp!=null)
-    //         Rsp=serviceResponseStr;
-    //     Log.i("VPOS", "[AT RSP] <<< " + serviceResponseStr.replace("\r\n", "\\r\\n"));
-    //     if(totalReceived!=0) {
-    //         if(resPresent.isEmpty())
-    //             return 0;
-    //         if(serviceResponseStr.toLowerCase().contains(resPresent.toLowerCase()))
-    //             return 0;
-    //         else
-    //             return -2;
-    //     }
-    //     else
-    //         return -2500;
-    // }
     //slave mode for update fw using AT+ROLE=0
     private boolean configureBleServices_role0() {
         Log.d("VPOS", "=== BLE Service Configuration ===");
@@ -1163,46 +905,6 @@ private static JSONObject parsePayload(String payload) {
                 Log.e("VPOS", "set RESTART success,can update fw,not enty +++ mode so if out this function its better restart application");
                 return true;
             }
-//
-////            String serviceCmd = "AT+role=0\r\n";
-//            String roleCmd = "AT+ROLE=0\r\n";
-//            Log.i("VPOS", "[AT CMD] >>> " + roleCmd.trim());
-//            int ret = At.Lib_ComSend(roleCmd.getBytes(), roleCmd.length());
-//
-//            if (ret != 0) {
-//                Log.e("VPOS", "Failed to send AT+role=0 command");
-//                return false;
-//            }
-//
-//
-//
-//            byte[] serviceResponse = new byte[256];
-//            int[] serviceLen = new int[1];
-//            ret = At.Lib_ComRecvAT(serviceResponse, serviceLen, 2000, 256);
-//            String serviceResponseStr = new String(serviceResponse, 0, serviceLen[0]);
-//            Log.i("VPOS", "[AT RSP] <<< " + serviceResponseStr.replace("\r\n", "\\r\\n"));
-//            if(serviceResponseStr.contains("OK")) {
-//                Log.d("VPOS", "Restarting module with AT+RESTART");
-//                String restartCmd = "AT+RESTART\r\n";
-//                Log.i("VPOS", "[AT CMD] >>> " + restartCmd.trim());
-//                ret = At.Lib_ComSend(restartCmd.getBytes(), restartCmd.length());
-//
-//                if (ret != 0) {
-//                    Log.e("VPOS", "Failed to send AT+RESTART command");
-//                    return false;
-//                }
-//
-//                // Wait for restart
-//                Log.d("VPOS", "Waiting for module to restart...");
-//                Thread.sleep(1000); // Wait 3 seconds for restart
-//                byte[] restartrsp = new byte[256];
-//                int[] restartrspLen = new int[1];
-//                ret = At.Lib_ComRecvAT(serviceResponse, serviceLen, 2000, 256);
-//                String restartrspStr = new String(serviceResponse, 0, serviceLen[0]);
-//                Log.i("VPOS", "[AT RSP] <<< " + serviceResponseStr.replace("\r\n", "\\r\\n"));
-//                Log.d("VPOS", "=== BLE Service Configuration Completed ===");
-//                return false;
-//            }
 
             Log.d("VPOS", "=== BLE Service Configuration Completed ===");
             return true;

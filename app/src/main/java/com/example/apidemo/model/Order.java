@@ -76,4 +76,39 @@ public class Order implements Serializable {
     public String getDisplayOption() {
         return prodSize + " / " + prodColor;
     }
+
+    /**
+     * Calculate discounted price based on percentage
+     * @param discountPercent Discount percentage (e.g., 10.0 for 10%)
+     * @return Discounted price as integer
+     */
+    public int getDiscountedPrice(double discountPercent) {
+        return (int) (prodPrice * (1 - discountPercent / 100.0));
+    }
+
+    /**
+     * Get formatted product name with quantity
+     * @param quantity Number of items
+     * @return Formatted string like "나이키알파플라이3 1개"
+     */
+    public String getFormattedProductName(int quantity) {
+        return prodName + " " + quantity + "개";
+    }
+
+    /**
+     * Get formatted product name with quantity = 1
+     * @return Formatted string like "나이키알파플라이3 1개"
+     */
+    public String getFormattedProductName() {
+        return getFormattedProductName(1);
+    }
+
+    /**
+     * Calculate discount amount
+     * @param discountPercent Discount percentage
+     * @return Discount amount as integer
+     */
+    public int getDiscountAmount(double discountPercent) {
+        return prodPrice - getDiscountedPrice(discountPercent);
+    }
 }

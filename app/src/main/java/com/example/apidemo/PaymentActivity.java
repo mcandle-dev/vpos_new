@@ -12,6 +12,7 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.apidemo.ble.BleConnection;
+import com.example.apidemo.model.Order;
 
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -34,6 +35,9 @@ public class PaymentActivity extends AppCompatActivity {
     private String mode;
     private int amount;
     private String productName;
+    private Order order;
+    private double discountPercent;
+    private String cardInfo;
     private BleConnection bleConnection;
 
     @Override
@@ -50,9 +54,23 @@ public class PaymentActivity extends AppCompatActivity {
         mode = getIntent().getStringExtra("EXTRA_MODE");
         if (mode == null) mode = "OFFLINE";
 
-        amount = getIntent().getIntExtra("EXTRA_AMOUNT", 0);
-        productName = getIntent().getStringExtra("EXTRA_PRODUCT_NAME");
-        if (productName == null) productName = "상품";
+        // Try to get Order object first (new approach)
+        order = (Order) getIntent().getSerializableExtra(BleConnectActivity.EXTRA_ORDER);
+        discountPercent = getIntent().getDoubleExtra(BleConnectActivity.EXTRA_DISCOUNT_PERCENT, 0.0);
+        cardInfo = getIntent().getStringExtra(BleConnectActivity.EXTRA_CARD_INFO);
+
+        // Fallback to individual extras for backward compatibility
+        if (order == null) {
+            amount = getIntent().getIntExtra("EXTRA_AMOUNT", 0);
+            productName = getIntent().getStringExtra("EXTRA_PRODUCT_NAME");
+            if (productName == null) productName = "상품";
+            if (cardInfo == null) cardInfo = "카드";
+        } else {
+            // New approach - calculate from Order object
+            amount = order.getDiscountedPrice(discountPercent);
+            productName = order.getFormattedProductName();
+            if (cardInfo == null) cardInfo = "현대백화점 카드";
+        }
 
         // Get shared BLE connection
         bleConnection = BleConnectActivity.getSharedBleConnection();
@@ -136,8 +154,18 @@ public class PaymentActivity extends AppCompatActivity {
 
     private void navigateToSuccess() {
         Intent intent = new Intent(this, SuccessActivity.class);
+
+        // Pass Order object if available
+        if (order != null) {
+            intent.putExtra(BleConnectActivity.EXTRA_ORDER, order);
+            intent.putExtra(BleConnectActivity.EXTRA_DISCOUNT_PERCENT, discountPercent);
+        }
+
+        // Pass card info and individual extras (backward compatibility)
+        intent.putExtra("EXTRA_CARD_INFO", cardInfo);
         intent.putExtra("EXTRA_PRODUCT_NAME", productName);
         intent.putExtra("EXTRA_AMOUNT", amount);
+
         startActivity(intent);
         finish();
     }

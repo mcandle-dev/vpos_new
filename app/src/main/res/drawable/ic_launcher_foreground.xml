@@ -1,30 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+
+    <!-- POS Terminal Body -->
     <path
+        android:pathData="M32,28 L76,28 Q78,28 78,30 L78,80 Q78,82 76,82 L32,82 Q30,82 30,80 L30,30 Q30,28 32,28 Z"
         android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
+        android:strokeWidth="2"
+        android:strokeColor="#E0E0E0"/>
+
+    <!-- Display Screen -->
+    <path
+        android:pathData="M36,34 L72,34 L72,50 L36,50 Z"
+        android:fillColor="#263238"
         android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+        android:strokeColor="#37474F"/>
+
+    <!-- Display Screen Light -->
+    <path
+        android:pathData="M38,36 L70,36 L70,38 L38,38 Z"
+        android:fillColor="#4FC3F7"
+        android:fillAlpha="0.6"/>
+
+    <!-- Card Reader Slot -->
+    <path
+        android:pathData="M40,54 L68,54 L68,58 L40,58 Z"
+        android:fillColor="#37474F"
+        android:strokeWidth="0.5"
+        android:strokeColor="#263238"/>
+
+    <!-- Keypad Buttons Row 1 -->
+    <path
+        android:pathData="M38,62 Q38,61 39,61 L45,61 Q46,61 46,62 L46,66 Q46,67 45,67 L39,67 Q38,67 38,66 Z"
+        android:fillColor="#ECEFF1"
+        android:strokeWidth="0.5"
+        android:strokeColor="#B0BEC5"/>
+    <path
+        android:pathData="M51,62 Q51,61 52,61 L58,61 Q59,61 59,62 L59,66 Q59,67 58,67 L52,67 Q51,67 51,66 Z"
+        android:fillColor="#ECEFF1"
+        android:strokeWidth="0.5"
+        android:strokeColor="#B0BEC5"/>
+    <path
+        android:pathData="M62,62 Q62,61 63,61 L69,61 Q70,61 70,62 L70,66 Q70,67 69,67 L63,67 Q62,67 62,66 Z"
+        android:fillColor="#ECEFF1"
+        android:strokeWidth="0.5"
+        android:strokeColor="#B0BEC5"/>
+
+    <!-- Keypad Buttons Row 2 -->
+    <path
+        android:pathData="M38,70 Q38,69 39,69 L45,69 Q46,69 46,70 L46,74 Q46,75 45,75 L39,75 Q38,75 38,74 Z"
+        android:fillColor="#ECEFF1"
+        android:strokeWidth="0.5"
+        android:strokeColor="#B0BEC5"/>
+    <path
+        android:pathData="M51,70 Q51,69 52,69 L58,69 Q59,69 59,70 L59,74 Q59,75 58,75 L52,75 Q51,75 51,74 Z"
+        android:fillColor="#ECEFF1"
+        android:strokeWidth="0.5"
+        android:strokeColor="#B0BEC5"/>
+    <path
+        android:pathData="M62,70 Q62,69 63,69 L69,69 Q70,69 70,70 L70,74 Q70,75 69,75 L63,75 Q62,75 62,74 Z"
+        android:fillColor="#ECEFF1"
+        android:strokeWidth="0.5"
+        android:strokeColor="#B0BEC5"/>
+
+    <!-- Enter Button (Green) -->
+    <path
+        android:pathData="M51,77 Q51,76 52,76 L69,76 Q70,76 70,77 L70,79 Q70,80 69,80 L52,80 Q51,80 51,79 Z"
+        android:fillColor="#4CAF50"
+        android:strokeWidth="0.5"
+        android:strokeColor="#388E3C"/>
+
+    <!-- Cancel Button (Red) -->
+    <path
+        android:pathData="M38,77 Q38,76 39,76 L45,76 Q46,76 46,77 L46,79 Q46,80 45,80 L39,80 Q38,80 38,79 Z"
+        android:fillColor="#F44336"
+        android:strokeWidth="0.5"
+        android:strokeColor="#D32F2F"/>
+
+    <!-- Receipt Paper -->
+    <path
+        android:pathData="M48,22 L60,22 L60,28 L59,29 L58,28 L57,29 L56,28 L55,29 L54,28 L53,29 L52,28 L51,29 L50,28 L49,29 L48,28 Z"
+        android:fillColor="#FFFFFF"
+        android:strokeWidth="0.5"
+        android:strokeColor="#E0E0E0"/>
+
+    <!-- Receipt Text Lines -->
+    <path
+        android:pathData="M50,24 L58,24"
+        android:strokeWidth="0.5"
+        android:strokeColor="#9E9E9E"/>
+    <path
+        android:pathData="M50,25.5 L58,25.5"
+        android:strokeWidth="0.5"
+        android:strokeColor="#9E9E9E"/>
 </vector>

@@ -139,7 +139,7 @@
             android:layout_height="56dp"
             android:layout_marginTop="24dp"
             android:backgroundTint="#1976D2"
-            android:text="카드 삽입 완료"
+            android:text="카드 결제 완료"
             android:textColor="#FFFFFF"
             android:textStyle="bold"
             app:cornerRadius="8dp" />
