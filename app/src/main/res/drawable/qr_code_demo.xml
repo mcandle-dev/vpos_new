@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+
+    <!-- White background -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,0 L200,0 L200,200 L0,200 Z" />
+
+    <!-- Top-left corner marker (larger, bolder) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M15,15 L75,15 L75,75 L15,75 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M25,25 L65,25 L65,65 L25,65 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M35,35 L55,35 L55,55 L35,55 Z" />
+
+    <!-- Top-right corner marker -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M125,15 L185,15 L185,75 L125,75 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M135,25 L175,25 L175,65 L135,65 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M145,35 L165,35 L165,55 L145,55 Z" />
+
+    <!-- Bottom-left corner marker -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M15,125 L75,125 L75,185 L15,185 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M25,135 L65,135 L65,175 L25,175 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M35,145 L55,145 L55,165 L35,165 Z" />
+
+    <!-- Timing patterns (vertical) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M85,15 L95,15 L95,25 L85,25 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M85,35 L95,35 L95,45 L85,45 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M85,55 L95,55 L95,65 L85,65 Z" />
+
+    <!-- Timing patterns (horizontal) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M15,85 L25,85 L25,95 L15,95 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M35,85 L45,85 L45,95 L35,95 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M55,85 L65,85 L65,95 L55,95 Z" />
+
+    <!-- Center and data blocks (larger blocks) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M85,85 L105,85 L105,105 L85,105 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M115,85 L135,85 L135,105 L115,105 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M145,85 L165,85 L165,105 L145,105 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M175,85 L185,85 L185,105 L175,105 Z" />
+
+    <!-- More data blocks -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M85,115 L105,115 L105,135 L85,135 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M115,115 L125,115 L125,135 L115,135 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M135,115 L155,115 L155,135 L135,135 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M165,115 L175,115 L175,125 L165,125 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M175,125 L185,125 L185,135 L175,135 Z" />
+
+    <!-- Bottom right area blocks -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M125,145 L145,145 L145,155 L125,155 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M155,145 L175,145 L175,165 L155,165 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M125,165 L145,165 L145,185 L125,185 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M155,175 L175,175 L175,185 L155,185 Z" />
+
+    <!-- Bottom center blocks -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M85,145 L105,145 L105,165 L85,165 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M105,155 L115,155 L115,175 L105,175 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M85,175 L95,175 L95,185 L85,185 Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M105,175 L115,175 L115,185 L105,185 Z" />
+</vector>

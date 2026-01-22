@@ -59,10 +59,6 @@ public class BleConnectActivity extends AppCompatActivity {
 
     // Views - Waiting screen
     private LinearLayout layoutWaitingScreen;
-    private TextView tvAnimatedDots;
-    private Button btnCancelWaiting;
-    private Handler dotsAnimationHandler;
-    private Runnable dotsAnimationRunnable;
 
     // Data
     private String deviceMac;
@@ -143,14 +139,9 @@ public class BleConnectActivity extends AppCompatActivity {
 
         // Waiting screen views
         layoutWaitingScreen = findViewById(R.id.layoutWaitingScreen);
-        tvAnimatedDots = findViewById(R.id.tvAnimatedDots);
-        btnCancelWaiting = findViewById(R.id.btnCancelWaiting);
 
         // Initially disable app payment until connected
         btnAppPayment.setEnabled(false);
-
-        // Setup cancel button handler
-        btnCancelWaiting.setOnClickListener(v -> showBenefitsScreen());
     }
 
     private void displayMemberInfo() {
@@ -240,13 +231,10 @@ public class BleConnectActivity extends AppCompatActivity {
         // Show waiting screen
         layoutWaitingScreen.setVisibility(View.VISIBLE);
 
-        // Update status bar - blue color for consistency
-        tvBottomStatus.setText("앱 결제 대기중");
-        tvBottomStatus.setTextColor(Color.parseColor("#1976D2"));
-        viewStatusIndicator.setBackgroundResource(R.drawable.circle_blue);
-
-        // Start animated dots
-        startDotsAnimation();
+        // Update status bar - keep green "연결됨" status
+        tvBottomStatus.setText("연결됨");
+        tvBottomStatus.setTextColor(Color.parseColor("#4CAF50"));
+        viewStatusIndicator.setBackgroundResource(R.drawable.circle_green);
     }
 
     /**
@@ -254,9 +242,6 @@ public class BleConnectActivity extends AppCompatActivity {
      */
     private void showBenefitsScreen() {
         currentState = ViewState.BENEFITS;
-
-        // Stop animation
-        stopDotsAnimation();
 
         // Show benefits content
         scrollViewContent.setVisibility(View.VISIBLE);
@@ -267,33 +252,6 @@ public class BleConnectActivity extends AppCompatActivity {
         // Reset status
         tvBottomStatus.setText("연결됨");
         tvBottomStatus.setTextColor(Color.parseColor("#4CAF50"));
-    }
-
-    /**
-     * Animate the dots: "" -> "." -> ".." -> "..." -> repeat
-     */
-    private void startDotsAnimation() {
-        final String[] dotStates = {"", ".", "..", "..."};
-        final int[] index = {0};
-
-        dotsAnimationHandler = new Handler(Looper.getMainLooper());
-        dotsAnimationRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (currentState == ViewState.WAITING) {
-                    tvAnimatedDots.setText(dotStates[index[0] % 4]);
-                    index[0]++;
-                    dotsAnimationHandler.postDelayed(this, 500); // 500ms interval
-                }
-            }
-        };
-        dotsAnimationHandler.post(dotsAnimationRunnable);
-    }
-
-    private void stopDotsAnimation() {
-        if (dotsAnimationHandler != null && dotsAnimationRunnable != null) {
-            dotsAnimationHandler.removeCallbacks(dotsAnimationRunnable);
-        }
     }
 
     private void autoConnectBle() {
@@ -351,7 +309,6 @@ public class BleConnectActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        stopDotsAnimation();
         super.onDestroy();
         // Ensure disconnection when activity is destroyed
         if (bleConnection != null && bleConnection.isConnected()) {

@@ -39,7 +39,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="혜택 안내"
+                android:text="결제 안내"
                 android:textColor="#FFFFFF"
                 android:textSize="16sp"
                 android:textStyle="bold" />
@@ -312,19 +312,13 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:orientation="vertical"
-        android:gravity="center"
-        android:padding="24dp"
+        android:gravity="center_horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/layoutBottomBar"
         app:layout_constraintTop_toBottomOf="@id/layoutHeader">
-
-        <!-- Phone Screen Icon -->
-        <ImageView
-            android:id="@+id/ivPhoneIcon"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
-            android:src="@drawable/ic_smartphone"
-            android:layout_marginBottom="24dp" />
 
         <!-- Confirmation Message -->
         <TextView
@@ -332,41 +326,75 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="고객 앱으로 주문 정보가\n전송되었습니다"
-            android:textSize="18sp"
+            android:textSize="17sp"
             android:textColor="#000000"
             android:gravity="center"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="4dp" />
 
-        <!-- Animated Dots -->
-        <TextView
-            android:id="@+id/tvAnimatedDots"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="..."
-            android:textSize="24sp"
-            android:textColor="#2196F3"
-            android:layout_marginBottom="24dp" />
-
-        <!-- Waiting Message -->
         <TextView
             android:id="@+id/tvWaitingMessage2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="고객이 앱에서 결제 중입니다..."
-            android:textSize="16sp"
+            android:text="PC 앱 결제 진행하여 주세요"
+            android:textSize="15sp"
             android:textColor="#666666"
             android:gravity="center"
-            android:layout_marginBottom="32dp" />
+            android:layout_marginBottom="16dp" />
 
-        <!-- Cancel Button -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCancelWaiting"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:text="취소하고 다시 진행"
-            android:textSize="16sp"
-            android:backgroundTint="#1976D2"
-            app:cornerRadius="6dp" />
+        <!-- Payment Code Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="결제 코드"
+            android:textSize="15sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvPaymentCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1   2   3   4   5   6"
+            android:textSize="28sp"
+            android:textColor="#000000"
+            android:textStyle="bold"
+            android:background="#FFFFFF"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Divider -->
+        <View
+            android:layout_width="180dp"
+            android:layout_height="1dp"
+            android:background="#E0E0E0"
+            android:layout_marginBottom="16dp" />
+
+        <!-- QR Code Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QR 코드"
+            android:textSize="15sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="8dp" />
+
+        <!-- QR Code Image -->
+        <ImageView
+            android:id="@+id/ivQrCode"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:src="@drawable/qr_code_png"
+            android:scaleType="fitCenter"
+            android:background="#FFFFFF"
+            android:padding="8dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="QR 코드를 스캔하세요"
+            android:textSize="13sp"
+            android:textColor="#666666" />
     </LinearLayout>
 
     <!-- Bottom Status Bar -->
